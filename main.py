@@ -1,3 +1,4 @@
+import html
 import os
 import sqlite3
 import uuid
@@ -51,10 +52,10 @@ def add_expense_to_database(connection, expenses_table_name, expense):
                 .format(
                     table_name=expenses_table_name,
                     e_id=expense.get_expense_id(), 
-                    e_name=expense.get_name(),
+                    e_name=html.escape(expense.get_name()),
                     e_cost=expense.get_cost(),
                     e_purchase_date=expense.get_purchase_date(),
-                    e_category=expense.get_category()
+                    e_category=html.escape(expense.get_category())
                 )
     )
 
@@ -108,8 +109,8 @@ def get_expenses_table(rows):
     return expenses
 
 def convert_table_row_to_expense(table_row):
-    return Expense(table_row[0], table_row[1], table_row[2], table_row[3],
-                    table_row[4])
+    return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
+                    table_row[3], html.unescape(table_row[4]))
 
 def main():
     option = input("Type '1' to add a new Expense\nType '2' to display Expenses list\nType any other character to exit\n")
