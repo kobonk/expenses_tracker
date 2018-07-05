@@ -33,7 +33,7 @@ class Expense:
 
     def get_purchase_date_string(self):
         """Returns the purchase_date in form of user-friendly string"""
-        return time.ctime(self.__purchase_date)
+        return time.strftime("%Y-%m-%d", time.gmtime(self.__purchase_date))
 
     def to_string(self):
         """Returns a string representation of Expense object"""

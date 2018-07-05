@@ -5,6 +5,7 @@ import uuid
 from colorama import init, Fore, Style
 from datetime import datetime
 from Expense import Expense
+from TexttableExpensesRenderer import TexttableExpensesRenderer
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DATABASE_PATH = r"{DIR_PATH}\dbs\expenses-tracker.db".format(**locals()).replace("\\", "\\\\")
@@ -137,9 +138,8 @@ def main():
         connection = get_database_connection(DATABASE_PATH)
         expenses = retrieve_all_expenses(connection, EXPENSES_TABLE_NAME)
 
-        for expense in expenses:
-            # print("\n")
-            print(expense.to_string())
+        renderer = TexttableExpensesRenderer()
+        renderer.render_expenses(expenses)
 
         print("\n")
         return main()
