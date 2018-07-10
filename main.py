@@ -5,7 +5,7 @@ import sqlite3
 import uuid
 from colorama import init, Fore, Style
 from datetime import datetime
-from Expense import Expense
+from expenses_tracker.expense.Expense import Expense
 from TexttableExpensesRenderer import TexttableExpensesRenderer
 
 def get_database_connection(database_path):
