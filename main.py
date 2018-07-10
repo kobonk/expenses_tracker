@@ -1,3 +1,4 @@
+import expenses_tracker.const
 import html
 import os
 import sqlite3
@@ -6,11 +7,6 @@ from colorama import init, Fore, Style
 from datetime import datetime
 from Expense import Expense
 from TexttableExpensesRenderer import TexttableExpensesRenderer
-
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-DATABASE_PATH = r"{DIR_PATH}\dbs\expenses-tracker.db".format(**locals()).replace("\\", "\\\\")
-EXPENSES_TABLE_NAME = "expenses"
-
 
 def get_database_connection(database_path):
     directory = os.path.dirname(database_path)

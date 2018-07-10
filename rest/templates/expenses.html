@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="jumbo">
+        <h3>List of expenses</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th><th>Category</th><th>Date</th><th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{expense.get_name()}}</td>
+                    <td>{{expense.get_category()}}</td>
+                    <td>{{expense.get_purchase_date_string()}}</td>
+                    <td>{{expense.get_cost()}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
