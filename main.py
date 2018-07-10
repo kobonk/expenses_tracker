@@ -1,10 +1,10 @@
-import expenses_tracker.const
 import html
 import os
 import sqlite3
 import uuid
 from colorama import init, Fore, Style
 from datetime import datetime
+from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME
 from expenses_tracker.expense.Expense import Expense
 from TexttableExpensesRenderer import TexttableExpensesRenderer
 
@@ -142,5 +142,5 @@ def main():
 
     return 0
     
-
+os.system("cls" if os.name == "nt" else "clear")
 main()
