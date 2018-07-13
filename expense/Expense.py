@@ -35,6 +35,15 @@ class Expense:
         """Returns the purchase_date in form of user-friendly string"""
         return time.strftime("%Y-%m-%d", time.gmtime(self.__purchase_date))
 
+    def to_json(self):
+        """Returns a directory which can be used for JSON output"""
+        return {
+            "name": self.__name,
+            "category": self.__category,
+            "cost": self.__cost,
+            "date": self.get_purchase_date_string()
+        }
+
     def to_string(self):
         """Returns a string representation of Expense object"""
         return ("------------------------------------------------------\n"
