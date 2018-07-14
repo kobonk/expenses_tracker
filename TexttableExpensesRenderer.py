@@ -18,7 +18,7 @@ class TexttableExpensesRenderer:
             table.add_row([index + 1, html.unescape(expense.get_name()),
                            expense.get_cost(), 
                            expense.get_purchase_date_string(),
-                           html.unescape(expense.get_category())])
+                           html.unescape(expense.get_category_id())])
 
         print(table.draw())
 
@@ -32,6 +32,6 @@ class TexttableExpensesRenderer:
         table.add_row(["Name:", html.unescape(expense.get_name())])
         table.add_row(["Cost:", expense.get_cost()])
         table.add_row(["Purchase Date:", expense.get_purchase_date_string()])
-        table.add_row(["Category:", html.unescape(expense.get_category())])
+        table.add_row(["Category:", html.unescape(expense.get_category_id())])
 
         print(table.draw())

@@ -12,7 +12,7 @@
                 {% for expense in expenses %}
                 <tr>
                     <td>{{expense.get_name()}}</td>
-                    <td>{{expense.get_category()}}</td>
+                    <td>{{expense.get_category_id()}}</td>
                     <td>{{expense.get_purchase_date_string()}}</td>
                     <td>{{expense.get_cost()}}</td>
                 </tr>

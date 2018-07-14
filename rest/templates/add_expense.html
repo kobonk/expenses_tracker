@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="jumbo">
+        <form name="add-expense">
+            <h3>Add new Expense</h3>
+            <input type="text" placeholder="Expense name" name="name" />
+            <br/>
+            <select name="category_id">
+                {% for category in categories %}
+                <option value="{{category.get_category_id()}}">{{category.get_name()}}</option>
+                {% endfor %}
+            </select>
+            <br/>
+            <input type="date" placeholder="Purchase date" name="purchase_date" />
+            <br/>
+            <input type="number" placeholder="Cost" name="cost" />
+            <br/>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='js/add_expense.js') }}"></script>
+{% endblock %}

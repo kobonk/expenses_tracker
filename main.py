@@ -4,7 +4,7 @@ import sqlite3
 import uuid
 from colorama import init, Fore, Style
 from datetime import datetime
-from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME
+from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
 from expenses_tracker.expense.Expense import Expense
 from TexttableExpensesRenderer import TexttableExpensesRenderer
 
@@ -31,6 +31,19 @@ def create_expenses_table(connection, expenses_table_name):
     
     connection.commit()
 
+def create_categories_table(connection, categories_table_name):
+    """Creates the Categories table in the database"""
+
+    cursor = connection.cursor()
+    
+    cursor.execute("""CREATE TABLE IF NOT EXISTS {table_name} (
+                    category_id  TEXT PRIMARY KEY, 
+                    name TEXT)"""
+                    .format(table_name=categories_table_name)
+    )
+    
+    connection.commit()
+
 def add_expense_to_database(connection, expenses_table_name, expense):
     cursor = connection.cursor()
 
@@ -52,7 +65,7 @@ def add_expense_to_database(connection, expenses_table_name, expense):
                     e_name=html.escape(expense.get_name()),
                     e_cost=expense.get_cost(),
                     e_purchase_date=expense.get_purchase_date(),
-                    e_category=html.escape(expense.get_category())
+                    e_category=html.escape(expense.get_category_id())
                 )
     )
 
@@ -116,6 +129,7 @@ def main():
         os.system("cls" if os.name == "nt" else "clear")
         connection = get_database_connection(DATABASE_PATH)
         create_expenses_table(connection, EXPENSES_TABLE_NAME)
+        create_categories_table(connection, CATEGORIES_TABLE_NAME)
 
         name = input("\nExpense name: ")
         expense_id = uuid.uuid4()

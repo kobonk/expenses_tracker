@@ -1,15 +1,16 @@
 """The module contains Expense class"""
-from datetime import date
+import uuid
+from datetime import date, datetime
 
 class Expense:
     """The class is a model for a single planned Expense"""
 
-    def __init__(self, expense_id, name, cost, purchase_date, category):
+    def __init__(self, expense_id, name, cost, purchase_date, category_id):
         self.__expense_id = expense_id
         self.__name = name
         self.__cost = cost
         self.__purchase_date = purchase_date
-        self.__category = category
+        self.__category_id = category_id
 
     def get_expense_id(self):
         """Returns the id of the Expense"""
@@ -27,9 +28,9 @@ class Expense:
         """Returns the purchase_date (seconds since epoch) of the Expense"""
         return self.__purchase_date
 
-    def get_category(self):
-        """Returns the name of the category"""
-        return self.__category
+    def get_category_id(self):
+        """Returns the id of the category"""
+        return self.__category_id
 
     def get_purchase_date_string(self):
         """Returns the purchase_date in form of user-friendly string"""
@@ -38,21 +39,25 @@ class Expense:
     def to_json(self):
         """Returns a directory which can be used for JSON output"""
         return {
-            "name": self.__name,
-            "category": self.__category,
+            "category_id": self.__category_id,
             "cost": self.__cost,
-            "date": self.get_purchase_date_string()
+            "date": self.get_purchase_date_string(),
+            "id": self.__expense_id,
+            "name": self.__name
         }
 
-    def to_string(self):
-        """Returns a string representation of Expense object"""
-        return ("------------------------------------------------------\n"
-                # "Expense {id}:\n"
-                # "------------------------------------------------------\n"
-                "Name: {name}\n"
-                "Category: {category}\n"
-                "Cost: {cost}\n"
-                "Date: {purchase_date}"
-               ).format(id=self.__expense_id, name=self.__name,
-                        category=self.__category, cost=self.__cost,
-                        purchase_date=self.get_purchase_date_string())
+    @classmethod
+    def from_json(cls, json):
+        return Expense(uuid.uuid4(), json["name"], json["cost"],
+                       convert_date_string_to_timestamp(json["purchase_date"]),
+                       json["category_id"])
+
+def convert_date_string_to_timestamp(date_string):
+    """Converts date (YYYY-MM-DD) to a number"""
+    try:
+        year, month, day = map(int, date_string.split("-"))
+        date = datetime(year, month, day)
+
+        return date.timestamp()
+    except Exception as exception:
+        raise ValueError(exception)
