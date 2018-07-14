@@ -1,5 +1,5 @@
 """The module contains Expense class"""
-import time
+from datetime import date
 
 class Expense:
     """The class is a model for a single planned Expense"""
@@ -33,7 +33,7 @@ class Expense:
 
     def get_purchase_date_string(self):
         """Returns the purchase_date in form of user-friendly string"""
-        return time.strftime("%Y-%m-%d", time.gmtime(self.__purchase_date))
+        return date.fromtimestamp(self.__purchase_date).strftime("%Y-%m-%d")
 
     def to_json(self):
         """Returns a directory which can be used for JSON output"""
