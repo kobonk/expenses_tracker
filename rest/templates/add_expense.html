@@ -3,17 +3,17 @@
     <div class="jumbo">
         <form name="add-expense">
             <h3>Add new Expense</h3>
-            <input type="text" placeholder="Expense name" name="name" />
+            <input type="text" placeholder="Expense name" name="name" required />
             <br/>
-            <select name="category_id">
+            <select name="category_id" required>
                 {% for category in categories %}
                 <option value="{{category.get_category_id()}}">{{category.get_name()}}</option>
                 {% endfor %}
             </select>
             <br/>
-            <input type="date" placeholder="Purchase date" name="purchase_date" />
+            <input type="date" placeholder="Purchase date" name="purchase_date" required />
             <br/>
-            <input type="number" placeholder="Cost" name="cost" />
+            <input type="number" placeholder="Cost" name="cost" step="0.01" min="0 required" />
             <br/>
             <button type="submit">Submit</button>
         </form>
