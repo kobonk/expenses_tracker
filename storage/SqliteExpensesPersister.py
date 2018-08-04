@@ -47,6 +47,9 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
+        print("Added: {expense_string}".format(
+            expense_string=expense.to_string()))
+
     def __create_expenses_table(self):
         """Creates the Expenses table in the database"""
 
