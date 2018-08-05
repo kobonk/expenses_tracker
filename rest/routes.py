@@ -12,6 +12,11 @@ api = Api(app)
 def home():
     return render_template("home.html")
 
+@app.errorhandler(404)
+def page_not_found(e):
+    """Renders default 404 Page Not Found template"""
+    return render_template("404.html"), 404
+
 @app.route("/add-expense")
 def add_expense():
     expenses_retriever = get_expenses_retriever()
