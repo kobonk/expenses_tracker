@@ -1,7 +1,4 @@
 import html
-import os
-import time
-import sqlite3
 from expenses_tracker.expense.Expense import Expense
 from expenses_tracker.expense.Category import Category
 
@@ -9,6 +6,8 @@ class SqliteExpensesRetriever():
     
     def __init__(self, expenses_table_name, categories_table_name,
                  connection_provider):
+        if not expenses_table_name:
+            raise ValueError("InvalidArgument: expenses_table_name must be provided")
         self.__expenses_table_name = expenses_table_name
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
