@@ -1,5 +1,7 @@
+import re
 import unittest
 from expenses_tracker.storage.SqliteExpensesRetriever import SqliteExpensesRetriever
+from expenses_tracker.tests.TestValidationUtils import validate_non_empty_string
 
 class ConnectionProvider:
     def get_connection(self):
@@ -29,11 +31,20 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         self.sut = self.create()
 
     def test_expenses_table_name_validation(self):
-        with self.assertRaises(ValueError) as cm:
-            self.expenses_table_name = None
+        def validate_expenses_table_name(value):
+            self.expenses_table_name = value
             self.create()
 
-        self.assertEqual(str(cm.exception), "InvalidArgument: expenses_table_name must be provided")
+        validate_non_empty_string(self, validate_expenses_table_name,
+                                  "InvalidArgument:.*expenses_table_name")
+
+    def test_categories_table_name_validation(self):
+        def validate_categories_table_name(value):
+            self.categories_table_name = value
+            self.create()
+
+        validate_non_empty_string(self, validate_categories_table_name,
+                                  "InvalidArgument:.*categories_table_name")
 
 if __name__ is "__main__":
     unittest.main()

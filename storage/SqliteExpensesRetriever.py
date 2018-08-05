@@ -6,8 +6,16 @@ class SqliteExpensesRetriever():
     
     def __init__(self, expenses_table_name, categories_table_name,
                  connection_provider):
-        if not expenses_table_name:
-            raise ValueError("InvalidArgument: expenses_table_name must be provided")
+        if (not expenses_table_name or 
+            not isinstance(expenses_table_name, str)):
+            raise ValueError("InvalidArgument: expenses_table_name must be a "
+                             "non-empty string")
+
+        if (not categories_table_name or 
+            not isinstance(categories_table_name, str)):
+            raise ValueError("InvalidArgument: categories_table_name must be a "
+                             "non-empty string")
+
         self.__expenses_table_name = expenses_table_name
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
