@@ -3,7 +3,7 @@ import uuid
 from datetime import date, datetime
 
 class Expense:
-    """The class is a model for a single planned Expense"""
+    """The class is a model for a single Expense"""
 
     def __init__(self, expense_id, name, cost, purchase_date, category_id):
         self.__expense_id = expense_id

@@ -16,7 +16,7 @@ class SqliteExpensesRetriever():
     def retrieve_expenses(self):
         """Returns the list of Expenses"""
         rows = self.__get_rows("""SELECT * FROM {table_name} 
-                        ORDER BY purchase_date ASC""".format(
+                        ORDER BY purchase_date DESC""".format(
                             table_name=self.__expenses_table_name
                         ))
 
