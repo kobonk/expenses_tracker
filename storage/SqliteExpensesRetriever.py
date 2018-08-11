@@ -16,6 +16,15 @@ class SqliteExpensesRetriever():
             raise ValueError("InvalidArgument: categories_table_name must be a "
                              "non-empty string")
 
+        if not connection_provider:
+            raise ValueError("InvalidArgument: connection_provider must be "
+                             "provided")
+        
+        if (not hasattr(connection_provider, "get_connection") or
+            not callable(connection_provider.get_connection)):
+            raise ValueError("InvalidArgument: connection_provider must have "
+                             "get_connection method")
+
         self.__expenses_table_name = expenses_table_name
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider

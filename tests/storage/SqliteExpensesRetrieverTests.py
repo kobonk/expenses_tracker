@@ -1,7 +1,11 @@
 import re
 import unittest
 from expenses_tracker.storage.SqliteExpensesRetriever import SqliteExpensesRetriever
-from expenses_tracker.tests.TestValidationUtils import validate_non_empty_string
+from expenses_tracker.tests.TestValidationUtils import (
+    validate_non_empty_string,
+    validate_object_with_methods,
+    validate_provided
+)
 
 class ConnectionProvider:
     def get_connection(self):
@@ -45,6 +49,32 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
 
         validate_non_empty_string(self, validate_categories_table_name,
                                   "InvalidArgument:.*categories_table_name")
+
+    def test_connection_provider_validation(self):
+        def validate_existence(value):
+            with self.assertRaises(ValueError) as cm:
+                self.connection_provider = value
+                self.create()
+
+            self.assertTrue(
+                re.compile("InvalidArgument:.*connection_provider")
+                .match(str(cm.exception))
+            )
+
+        def validate_methods(value, method_name):
+            with self.assertRaises(ValueError) as cm:
+                self.connection_provider = value
+                self.create()
+
+            
+            self.assertTrue(
+                re.compile("InvalidArgument:.*connection_provider.*"
+                           "{method_name}".format(method_name=method_name)
+                ).match(str(cm.exception))
+            )
+        
+        validate_provided(validate_existence)
+        validate_object_with_methods(self, ["get_connection"], validate_methods)
 
 if __name__ is "__main__":
     unittest.main()
