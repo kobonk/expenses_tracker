@@ -60,6 +60,16 @@ class AddExpense(Resource):
 
         return jsonify(expense.to_json())
 
+class ExpenseNames(Resource):
+    def get(self, name):
+        if not name:
+            return jsonify([])
+        
+        expenses_retriever = get_expenses_retriever()
+        expense_names = expenses_retriever.retrieve_similar_expense_names(name)
+
+        return jsonify(expense_names)
+
 class Categories(Resource):
     def get(self):
         expenses_retriever = get_expenses_retriever()
@@ -69,6 +79,7 @@ class Categories(Resource):
         return jsonify({ "results": categories_as_json })
 
 api.add_resource(Expenses, "/expenses")
+api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")
  
