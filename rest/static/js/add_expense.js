@@ -16,18 +16,25 @@
         let cost = document.getElementsByName("cost")[0].value;
         
         let expense = { name, category_id, purchase_date, cost };
-
         let xhttp = new XMLHttpRequest();
+        let fieldNames = ["name", "category_id", "purchase_date", "cost"];
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                console.log("Expense added.");
+                fieldNames.forEach(name => {
+                    let field = document.getElementsByName(name)[0];
+                    field.disabled = false;
+                    field.value = "";
+                });
+                document.getElementsByName("submit")[0].disabled = false;
             }
         };
 
         xhttp.open("POST", "/expense", true);
         xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhttp.send(JSON.stringify(expense));
+
+        fieldNames.forEach(name => document.getElementsByName(name)[0].disabled = true);
     };
 
     document.addEventListener('DOMContentLoaded', initialize, false);
