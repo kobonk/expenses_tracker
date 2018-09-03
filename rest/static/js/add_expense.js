@@ -1,42 +1,88 @@
 (function(){
 
-    function initialize() {
-        let form = document.getElementsByName("add-expense")[0];
+    const addExpenseForm = (function(){
+        const form = document.getElementsByName("add-expense")[0];
 
-        form.addEventListener("submit", addExpense);
-    };
-    
-    function addExpense(event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        let name = document.getElementsByName("name")[0].value;
-        let category_id = document.getElementsByName("category_id")[0].value;
-        let purchase_date = document.getElementsByName("purchase_date")[0].value;
-        let cost = document.getElementsByName("cost")[0].value;
-        
-        let expense = { name, category_id, purchase_date, cost };
-        let xhttp = new XMLHttpRequest();
-        let fieldNames = ["name", "category_id", "purchase_date", "cost"];
-
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                fieldNames.forEach(name => {
-                    let field = document.getElementsByName(name)[0];
-                    field.disabled = false;
-                    field.value = "";
-                });
-                document.getElementsByName("submit")[0].disabled = false;
-            }
+        const fieldsMap = {
+            category_id: form["category_id"],
+            cost: form["cost"],
+            name: form["name"],
+            purchase_date: form["purchase_date"]
         };
 
-        xhttp.open("POST", "/expense", true);
-        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhttp.send(JSON.stringify(expense));
+        const submitButton = form["submit"];
 
-        fieldNames.forEach(name => document.getElementsByName(name)[0].disabled = true);
-    };
+        function createExpense() {
+            return Object.keys(fieldsMap).reduce((result, currentKey) => {
+                return Object.assign({}, result, { [currentKey]: fieldsMap[currentKey].value });
+            }, {});
+        }
 
-    document.addEventListener('DOMContentLoaded', initialize, false);
+        function disableForm() {
+            Object.values(fieldsMap).forEach(field => field.disabled = true);
+            submitButton.disabled = true;
+        }
+
+        function enableForm() {
+            Object.values(fieldsMap).forEach(field => field.disabled = false);
+            submitButton.disabled = false;
+            fieldsMap.name.focus();
+        }
+
+        function setDefaultValues() {
+            Object.entries(fieldsMap).forEach(([key, field]) => {
+                if (key !== "purchase_date") {
+                    field.value = "";
+                }
+            });
+            fieldsMap.purchase_date.value = formatDateString(new Date());
+        }
+
+        function formatDateString(date) {
+            let dateParts = [
+                date.getFullYear() + "",
+                date.getMonth() + 1 + "",
+                date.getDate() + ""
+            ]
+            return dateParts.map((part) => {
+                if (part.length < 2) {
+                    return "0" + part;
+                } else {
+                    return part
+                }
+            }).join("-");
+        }
+
+        function addExpense(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            let expense = createExpense();
+            let xhttp = new XMLHttpRequest();
+    
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    setDefaultValues();
+                    enableForm();
+                }
+            };
+    
+            xhttp.open("POST", "/expense", true);
+            xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhttp.send(JSON.stringify(expense));
+    
+            disableForm();
+        };
+
+        return {
+            initialize: () => {
+                form.addEventListener("submit", addExpense);
+                setDefaultValues();
+                enableForm();
+            }
+        }
+    })();
+
+    document.addEventListener('DOMContentLoaded', addExpenseForm.initialize, false);
 
 })()
