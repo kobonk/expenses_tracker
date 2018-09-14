@@ -58,19 +58,14 @@
             event.stopPropagation();
             
             let expense = createExpense();
-            let xhttp = new XMLHttpRequest();
-    
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
+            
+            makeRequest(
+                { method: "POST", url: "/expense", payload: JSON.stringify(expense) },
+                () => {
                     setDefaultValues();
                     enableForm();
                 }
-            };
-    
-            xhttp.open("POST", "/expense", true);
-            xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xhttp.send(JSON.stringify(expense));
-    
+            );
             disableForm();
         };
 
@@ -83,6 +78,49 @@
         }
     })();
 
-    document.addEventListener('DOMContentLoaded', addExpenseForm.initialize, false);
+    const makeRequest = function(params, callback) {
+        let xhttp = new XMLHttpRequest();
+    
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                callback(xhttp.response);
+            }
+        };
+
+        xhttp.open(params.method, params.url, true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.send(params.payload);
+    };
+
+    const expensesList = (function(){
+        let createHtmlRow = (date, name, category, cost) => {
+            return `<tr><td>${date}</td><td>${name}</td><td>${category}</td><td>${cost}</td></tr>`;
+        };
+
+        let renderRows = (rows) => {
+            document.body.querySelector("#expenses tbody").innerHTML = rows.join("");
+        };
+
+        return {
+            updateRows: () => {
+                makeRequest(
+                    { method: "GET", url: "/expenses/10"},
+                    response => {
+                        rows = JSON.parse(response).results;
+                        renderRows(rows.map(row => {
+                            return createHtmlRow(row.date, row.name, row.category_id, row.cost);
+                        }))
+                    }
+                )
+            }
+        }
+    })();
+
+    const onDomContentLoaded = () => {
+        addExpenseForm.initialize();
+        expensesList.updateRows()
+    };
+
+    document.addEventListener('DOMContentLoaded', onDomContentLoaded, false);
 
 })()

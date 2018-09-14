@@ -40,9 +40,9 @@ def convert_models_to_json(models):
     return list(map(lambda model: model.to_json(), models))
 
 class Expenses(Resource):
-    def get(self):
+    def get(self, amount):
         expenses_retriever = get_expenses_retriever()
-        expenses = expenses_retriever.retrieve_expenses()
+        expenses = expenses_retriever.retrieve_expenses(amount)
         expenses_as_json = convert_models_to_json(expenses)
 
         return jsonify({ "results": expenses_as_json })
@@ -78,7 +78,7 @@ class Categories(Resource):
 
         return jsonify({ "results": categories_as_json })
 
-api.add_resource(Expenses, "/expenses")
+api.add_resource(Expenses, "/expenses/<amount>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")

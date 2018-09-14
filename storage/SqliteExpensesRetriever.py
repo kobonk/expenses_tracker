@@ -14,11 +14,12 @@ class SqliteExpensesRetriever():
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
 
-    def retrieve_expenses(self):
+    def retrieve_expenses(self, amount):
         """Returns the list of Expenses"""
         rows = self.__get_rows("""SELECT * FROM {table_name} 
-                        ORDER BY purchase_date DESC""".format(
-                            table_name=self.__expenses_table_name
+                        ORDER BY purchase_date DESC{limit}""".format(
+                            table_name=self.__expenses_table_name,
+                            limit=self.__get_limit_query_string(amount)
                         ))
 
         return self.__get_models_array(rows, "expense")
@@ -42,6 +43,12 @@ class SqliteExpensesRetriever():
                         ))
 
         return self.__get_models_array(rows, "category")
+
+    def __get_limit_query_string(self, amount):
+        if amount:
+            return " LIMIT {amount}".format(amount=amount)
+
+        return ""
 
     def __get_rows(self, query):
         connection = self.__connection_provider.get_connection()
