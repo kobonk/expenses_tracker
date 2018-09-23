@@ -64,6 +64,7 @@
                 () => {
                     setDefaultValues();
                     enableForm();
+                    expensesList.updateRows();
                 }
             );
             disableForm();
@@ -94,7 +95,7 @@
 
     const expensesList = (function(){
         let createHtmlRow = (date, name, category, cost) => {
-            return `<tr><td>${date}</td><td>${name}</td><td>${category}</td><td>${cost}</td></tr>`;
+            return `<tr><td>${date}</td><td>${name}</td><td>${category}</td><td>${cost.toFixed(2)}</td></tr>`;
         };
 
         let renderRows = (rows) => {
