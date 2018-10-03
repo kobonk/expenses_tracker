@@ -105,7 +105,7 @@
         return {
             updateRows: () => {
                 makeRequest(
-                    { method: "GET", url: "/expenses/10"},
+                    { method: "GET", url: "/expenses/20"},
                     response => {
                         rows = JSON.parse(response).results;
                         renderRows(rows.map(row => {
