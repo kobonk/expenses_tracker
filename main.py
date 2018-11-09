@@ -5,6 +5,7 @@ import uuid
 from colorama import init, Fore, Style
 from datetime import datetime
 from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+from expenses_tracker.expense.Category import Category
 from expenses_tracker.expense.Expense import Expense
 from TexttableExpensesRenderer import TexttableExpensesRenderer
 
@@ -52,7 +53,7 @@ def add_expense_to_database(connection, expenses_table_name, expense):
                     name, 
                     cost, 
                     purchase_date, 
-                    category
+                    category_id
                 ) VALUES (
                     '{e_id}', 
                     '{e_name}', 
@@ -65,7 +66,9 @@ def add_expense_to_database(connection, expenses_table_name, expense):
                     e_name=html.escape(expense.get_name()),
                     e_cost=expense.get_cost(),
                     e_purchase_date=expense.get_purchase_date(),
-                    e_category=html.escape(expense.get_category_id())
+                    e_category=html.escape(
+                        expense.get_category().get_category_id()
+                    )
                 )
     )
 
@@ -94,12 +97,16 @@ def convert_date_string_to_timestamp(date_string):
     except Exception as exception:
         raise ValueError(exception)
 
-def retrieve_all_expenses(connection, expenses_table_name):
+def retrieve_all_expenses(connection, expenses_table_name, categories_table_name):
     """Returns the list of Expenses"""
-    rows = get_rows(connection, """SELECT * FROM {table_name} 
-                    ORDER BY purchase_date ASC""".format(
-                        table_name=expenses_table_name
-                    ))
+    selection = """SELECT {ex_table}.expense_id, {ex_table}.name, {ex_table}.cost, 
+                   {ex_table}.purchase_date, {cat_table}.category_id, 
+                   {cat_table}.name AS 'category_name' FROM {ex_table} 
+                   LEFT JOIN {cat_table} ON 
+                   {ex_table}.category_id = {cat_table}.category_id""".format(
+                       ex_table=expenses_table_name,
+                       cat_table=categories_table_name)
+    rows = get_rows(connection, selection)
 
     return get_expenses_table(rows)
 
@@ -120,7 +127,34 @@ def get_expenses_table(rows):
 
 def convert_table_row_to_expense(table_row):
     return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
-                    table_row[3], html.unescape(table_row[4]))
+                   table_row[3], 
+                   Category(table_row[4], html.unescape(table_row[5])))
+
+def get_category_for_name(category_name, categories_table_name, connection):
+    """Returns the existing Category for the provided name"""
+    selection = """SELECT * FROM {cat_table} WHERE name = '{name}'""".format(
+                cat_table=categories_table_name, name=category_name)
+    rows = get_rows(connection, selection)
+
+    if not rows:
+        return None
+
+    return Category(rows[0][0], html.unescape(rows[0][1]))
+
+def read_category_name(input_label, categories_table_name, connection):
+    category_name = input(input_label + "(type 0 to exit) ")
+
+    if category_name is "0":
+        return None
+
+    category = get_category_for_name(category_name, categories_table_name, 
+                                 connection)
+
+    if category is None:
+        print("\nCategory name not found in the database")
+        return None
+
+    return category
 
 def main():
     option = input("Type '1' to add a new Expense\nType '2' to display Expenses list\nType any other character to exit\n")
@@ -133,7 +167,13 @@ def main():
 
         name = input("\nExpense name: ")
         expense_id = uuid.uuid4()
-        category = input("Expense category: ")
+        category = read_category_name("Expense category name: ", 
+                                      CATEGORIES_TABLE_NAME, connection)
+
+        if category is None:
+            print("\n")
+            return main()
+
         purchase_date = get_purchase_date()
         cost = input("Cost: ")
 
@@ -146,7 +186,8 @@ def main():
     if option is "2":
         os.system("cls" if os.name == "nt" else "clear")
         connection = get_database_connection(DATABASE_PATH)
-        expenses = retrieve_all_expenses(connection, EXPENSES_TABLE_NAME)
+        expenses = retrieve_all_expenses(connection, EXPENSES_TABLE_NAME,
+                                         CATEGORIES_TABLE_NAME)
 
         renderer = TexttableExpensesRenderer()
         renderer.render_expenses(expenses)

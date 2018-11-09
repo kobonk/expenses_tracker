@@ -109,7 +109,7 @@
                     response => {
                         rows = JSON.parse(response).results;
                         renderRows(rows.map(row => {
-                            return createHtmlRow(row.date, row.name, row.category_id, row.cost);
+                            return createHtmlRow(row.date, row.name, row.category.name, row.cost);
                         }))
                     }
                 )

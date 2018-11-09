@@ -1,16 +1,17 @@
 """The module contains Expense class"""
 import uuid
 from datetime import date, datetime
+from expenses_tracker.expense.Category import Category
 
 class Expense:
     """The class is a model for a single Expense"""
 
-    def __init__(self, expense_id, name, cost, purchase_date, category_id):
+    def __init__(self, expense_id, name, cost, purchase_date, category):
         self.__expense_id = expense_id
         self.__name = name
         self.__cost = cost
         self.__purchase_date = purchase_date
-        self.__category_id = category_id
+        self.__category = category
 
     def get_expense_id(self):
         """Returns the id of the Expense"""
@@ -28,9 +29,9 @@ class Expense:
         """Returns the purchase_date (seconds since epoch) of the Expense"""
         return self.__purchase_date
 
-    def get_category_id(self):
-        """Returns the id of the category"""
-        return self.__category_id
+    def get_category(self):
+        """Returns the expense category"""
+        return self.__category
 
     def get_purchase_date_string(self):
         """Returns the purchase_date in form of user-friendly string"""
@@ -46,7 +47,7 @@ class Expense:
     def to_json(self):
         """Returns a directory which can be used for JSON output"""
         return {
-            "category_id": self.__category_id,
+            "category": self.__category.to_json(),
             "cost": self.__cost,
             "date": self.get_purchase_date_string(),
             "id": self.__expense_id,
@@ -55,9 +56,12 @@ class Expense:
 
     @classmethod
     def from_json(cls, json):
+        category_asset = json["category"]
+        category = Category(category_asset.category_id, category_asset.name)
+
         return Expense(uuid.uuid4(), json["name"], json["cost"],
                        convert_date_string_to_timestamp(json["purchase_date"]),
-                       json["category_id"])
+                       category)
 
 def convert_date_string_to_timestamp(date_string):
     """Converts date (YYYY-MM-DD) to a number"""
