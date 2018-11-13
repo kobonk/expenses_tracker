@@ -40,7 +40,8 @@ class SqliteExpensesPersister():
                     e_name=html.escape(expense.get_name()),
                     e_cost=expense.get_cost(),
                     e_purchase_date=expense.get_purchase_date(),
-                    e_category_id=html.escape(expense.get_category_id())
+                    e_category_id=html.escape(expense.get_category()
+                                              .get_category_id())
                 )
         )
 

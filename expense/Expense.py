@@ -56,8 +56,8 @@ class Expense:
 
     @classmethod
     def from_json(cls, json):
-        category_asset = json["category"]
-        category = Category(category_asset.category_id, category_asset.name)
+        category_dict = json["category"]
+        category = Category(category_dict["id"], category_dict["name"])
 
         return Expense(uuid.uuid4(), json["name"], json["cost"],
                        convert_date_string_to_timestamp(json["purchase_date"]),

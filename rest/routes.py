@@ -76,7 +76,7 @@ class Categories(Resource):
         categories = expenses_retriever.retrieve_categories()
         categories_as_json = convert_models_to_json(categories)
 
-        return jsonify({ "results": categories_as_json })
+        return jsonify(categories_as_json)
 
 api.add_resource(Expenses, "/expenses/<amount>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")

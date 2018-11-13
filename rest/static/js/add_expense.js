@@ -12,10 +12,25 @@
 
         const submitButton = form["submit"];
 
-        function createExpense() {
-            return Object.keys(fieldsMap).reduce((result, currentKey) => {
+        function processCategories(callback) {
+            makeRequest(
+                { method: "GET", url: "/categories"},
+                response => callback(JSON.parse(response))
+            )
+        }
+
+        function createExpense(callback) {
+            let expense = Object.keys(fieldsMap).reduce((result, currentKey) => {
+                if (currentKey === "category_id") return;
+
                 return Object.assign({}, result, { [currentKey]: fieldsMap[currentKey].value });
             }, {});
+
+            processCategories(categories => {
+                let category = categories.filter(category => category.id === fieldsMap.category_id.value)[0];
+
+                callback(Object.assign({}, expense, { category: category }))
+            });
         }
 
         function disableForm() {
@@ -57,17 +72,17 @@
             event.preventDefault();
             event.stopPropagation();
             
-            let expense = createExpense();
-            
-            makeRequest(
-                { method: "POST", url: "/expense", payload: JSON.stringify(expense) },
-                () => {
-                    setDefaultValues();
-                    enableForm();
-                    expensesList.updateRows();
-                }
-            );
-            disableForm();
+            createExpense(expense => {
+                makeRequest(
+                    { method: "POST", url: "/expense", payload: JSON.stringify(expense) },
+                    () => {
+                        setDefaultValues();
+                        enableForm();
+                        expensesList.updateRows();
+                    }
+                );
+                disableForm();
+            });            
         };
 
         return {
