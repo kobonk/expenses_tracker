@@ -65,7 +65,7 @@ table thead tr th:last-of-type {
     text-align: right;
 }
 
-table tbody tr td:nth-of-type(4) {
+table tbody tr td:last-of-type {
     text-align: right;
     font-weight: bold;
 }

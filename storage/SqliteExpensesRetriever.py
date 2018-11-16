@@ -1,6 +1,7 @@
 import html
 from expenses_tracker.expense.Expense import Expense
 from expenses_tracker.expense.Category import Category
+from expenses_tracker.expense.Statistics import Statistics
 
 class SqliteExpensesRetriever():
     
@@ -28,6 +29,24 @@ class SqliteExpensesRetriever():
         rows = self.__get_rows(selection)
 
         return self.__get_models_array(rows, "expense")
+
+    def retrieve_category_statistics_between_dates(self, start_date, end_date):
+        """Returns a list of Statistics added between start and end date"""
+        selection = """SELECT SUM({ex_table}.cost) AS 'total', 
+                    {cat_table}.category_id, 
+                    {cat_table}.name AS 'category_name' FROM {ex_table} 
+                    LEFT JOIN {cat_table} ON 
+                    {ex_table}.category_id = {cat_table}.category_id
+                    WHERE {ex_table}.purchase_date 
+                    BETWEEN {start_date} AND {end_date}
+                    GROUP BY category_name
+                    ORDER BY total DESC""".format(
+                        ex_table=self.__expenses_table_name,
+                        cat_table=self.__categories_table_name,
+                        start_date=start_date, end_date=end_date)
+        rows = self.__get_rows(selection)
+
+        return self.__get_models_array(rows, "statistics")
 
     def retrieve_similar_expense_names(self, expense_name):
         """Returns a list of expense names similar to the one provided"""
@@ -79,6 +98,9 @@ class SqliteExpensesRetriever():
         if model_type is "category":
             return self.__convert_table_row_to_category
 
+        if model_type is "statistics":
+            return self.__convert_table_row_to_statistics
+
     def __convert_table_row_to_expense(self, table_row):
         return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
                        table_row[3], self.__convert_table_row_to_category(
@@ -87,6 +109,11 @@ class SqliteExpensesRetriever():
 
     def __convert_table_row_to_category(self, table_row):
         return Category(table_row[0], html.unescape(table_row[1]))
+
+    def __convert_table_row_to_statistics(self, table_row):
+        category = Category(table_row[1], html.unescape(table_row[2]))
+
+        return Statistics(category, float(table_row[0]))
 
     def __validate_expenses_table_name(self, expenses_table_name):
         if (not expenses_table_name or 

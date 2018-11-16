@@ -122,7 +122,7 @@
                 makeRequest(
                     { method: "GET", url: "/expenses/20"},
                     response => {
-                        rows = JSON.parse(response).results;
+                        let rows = JSON.parse(response).results;
                         renderRows(rows.map(row => {
                             return createHtmlRow(row.date, row.name, row.category.name, row.cost);
                         }))
@@ -132,9 +132,38 @@
         }
     })();
 
+    const expensesStatisticsList = (function() {
+        let createHtmlRow = (categoryName, total) => {
+            return `<tr><td>${categoryName}</td><td>${total.toFixed(2)}</td></tr>`;
+        };
+
+        let renderRows = (rows) => {
+            document.body.querySelector("#statistics tbody").innerHTML = rows.join("");
+        };
+
+        return {
+            updateRows: (days=30) => {
+                let dayInSeconds = 86400;
+                let end_timestamp = parseInt(Date.now() / 1000);
+                let start_timestamp = end_timestamp - parseInt(days * dayInSeconds);
+
+                makeRequest(
+                    { method: "GET", url: `/statistics/${start_timestamp}/${end_timestamp}` },
+                    response => {
+                        let rows = JSON.parse(response);
+                        renderRows(rows.map(row => {
+                            return createHtmlRow(row.category.name, row.total);
+                        }))
+                    }
+                )
+            }
+        }
+    })();
+
     const onDomContentLoaded = () => {
         addExpenseForm.initialize();
-        expensesList.updateRows()
+        expensesList.updateRows();
+        expensesStatisticsList.updateRows();
     };
 
     document.addEventListener('DOMContentLoaded', onDomContentLoaded, false);
