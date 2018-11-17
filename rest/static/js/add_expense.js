@@ -78,6 +78,7 @@
                     () => {
                         setDefaultValues();
                         enableForm();
+                        expensesStatisticsList.updateRows();
                         expensesList.updateRows();
                     }
                 );
