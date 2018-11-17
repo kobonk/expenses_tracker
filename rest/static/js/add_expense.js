@@ -121,7 +121,7 @@
         return {
             updateRows: () => {
                 makeRequest(
-                    { method: "GET", url: "/expenses/20"},
+                    { method: "GET", url: "/expenses/30"},
                     response => {
                         let rows = JSON.parse(response).results;
                         renderRows(rows.map(row => {
@@ -142,6 +142,10 @@
             document.body.querySelector("#statistics tbody").innerHTML = rows.join("");
         };
 
+        let updateTotal = (total) => {
+            document.body.querySelector("#statistics_total").innerHTML = total.toFixed(2);
+        }
+
         return {
             updateRows: (days=30) => {
                 let dayInSeconds = 86400;
@@ -154,7 +158,10 @@
                         let rows = JSON.parse(response);
                         renderRows(rows.map(row => {
                             return createHtmlRow(row.category.name, row.total);
-                        }))
+                        }));
+                        updateTotal(rows.reduce((total, row) => {
+                            return total + row.total;
+                        }, 0))
                     }
                 )
             }

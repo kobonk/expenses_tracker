@@ -54,14 +54,23 @@ table {
 }
 
 table tbody tr td {
-    padding: 10px 0;
+    padding: 10px;
+    border-collapse: collapse;
+    border: none;
 }
 
-table thead tr th {
-    text-align: left
+table tbody tr:nth-child(even) td {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-table thead tr th:last-of-type {
+table tr th {
+    text-align: left;
+    padding: 10px;
+    border-collapse: collapse;
+    border: none;
+}
+
+table tr th:last-of-type {
     text-align: right;
 }
 
@@ -72,5 +81,13 @@ table tbody tr td:last-of-type {
 
 table tbody tr td:nth-of-type(3) {
     color: #777
+}
+
+table thead tr th {
+    border-bottom: 1px solid #aaa;
+}
+
+table tfoot tr th {
+    border-top: 1px solid #aaa;
 }
 
