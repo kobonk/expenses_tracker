@@ -1,13 +1,13 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, make_response
 from flask_restful import Resource, Api
 from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
 from expenses_tracker.expense.Expense import Expense
 from expenses_tracker.storage.ExpensesPersisterFactory import ExpensesPersisterFactory
 from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
- 
+
 app = Flask(__name__)
 api = Api(app)
- 
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -64,7 +64,7 @@ class ExpenseNames(Resource):
     def get(self, name):
         if not name:
             return jsonify([])
-        
+
         expenses_retriever = get_expenses_retriever()
         expense_names = expenses_retriever.retrieve_similar_expense_names(name)
 
@@ -76,7 +76,10 @@ class Categories(Resource):
         categories = expenses_retriever.retrieve_categories()
         categories_as_json = convert_models_to_json(categories)
 
-        return jsonify(categories_as_json)
+        response = make_response(jsonify(categories_as_json))
+        response.headers['Access-Control-Allow-Origin'] = '*'
+
+        return response
 
 class Statistics(Resource):
     def get(self, start_date, end_date):
@@ -92,6 +95,6 @@ api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")
 api.add_resource(Statistics, "/statistics/<start_date>/<end_date>")
- 
+
 if __name__ == "__main__":
     app.run(debug=True)
