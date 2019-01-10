@@ -86,6 +86,13 @@ class Statistics(Resource):
 
         return jsonify(statistics_as_json)
 
+class StatisticsMonthly(Resource):
+    def get(self, number_of_months):
+        expenses_retriever = get_expenses_retriever()
+        statistics = expenses_retriever.retrieve_statistics_for_months(number_of_months)
+        statistics_as_json = convert_models_to_json(statistics)
+
+        return jsonify(statistics_as_json)
 
 api.add_resource(Expenses, "/expenses/<amount>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
