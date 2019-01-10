@@ -1,4 +1,5 @@
 """The module contains Category class"""
+import uuid
 
 class Category:
     """The class is a model for Categories"""
@@ -14,9 +15,19 @@ class Category:
         """Returns the name of the category"""
         return self.__name
 
+    def to_string(self):
+        """Returns a string representation of the Category"""
+        return "{name} ({id})".format(
+            name=self.get_name(), id=self.get_category_id()
+        )
+
     def to_json(self):
         """Returns JSON representation of the Category model"""
         return {
             "id": self.__category_id,
             "name": self.__name
         }
+
+    @classmethod
+    def from_json(cls, json):
+        return Category(str(uuid.uuid4()), json["name"])

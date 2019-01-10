@@ -1,11 +1,14 @@
 from flask import Flask, jsonify, render_template, request, make_response
+from flask_cors import CORS
 from flask_restful import Resource, Api
 from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+from expenses_tracker.expense.Category import Category
 from expenses_tracker.expense.Expense import Expense
 from expenses_tracker.storage.ExpensesPersisterFactory import ExpensesPersisterFactory
 from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 @app.route("/")
@@ -76,10 +79,18 @@ class Categories(Resource):
         categories = expenses_retriever.retrieve_categories()
         categories_as_json = convert_models_to_json(categories)
 
-        response = make_response(jsonify(categories_as_json))
-        response.headers['Access-Control-Allow-Origin'] = '*'
+        return jsonify(categories_as_json)
 
-        return response
+    def post(self):
+        json_data = request.get_json(force=True)
+        category = Category.from_json(json_data)
+        persister = get_expenses_persister()
+
+        print(category.get_category_id())
+
+        persister.add_category(category)
+
+        return jsonify(category.to_json())
 
 class Statistics(Resource):
     def get(self, start_date, end_date):

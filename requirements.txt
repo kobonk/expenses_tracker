@@ -1,4 +1,5 @@
 colorama
 flask
+flask-cors
 flask-restful
 texttable
