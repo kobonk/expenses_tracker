@@ -135,7 +135,7 @@
 
     const expensesStatisticsList = (function() {
         let createHtmlRow = (categoryName, total) => {
-            return `<tr><td>${categoryName}</td><td>${total.toFixed(2)}</td></tr>`;
+            return `<tr><td>${categoryName}</td><td>${total.toFixed(2)}</td><td></td></tr>`;
         };
 
         let renderRows = (rows) => {
@@ -148,17 +148,21 @@
 
         return {
             updateRows: (days=30) => {
-                let dayInSeconds = 86400;
-                let end_timestamp = parseInt(Date.now() / 1000);
-                let start_timestamp = end_timestamp - parseInt(days * dayInSeconds);
+                let date = new Date();
+                let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+                let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                let endTimestamp = parseInt(lastDay / 1000);
+                let startTimestamp = parseInt(firstDay / 1000);
 
                 makeRequest(
-                    { method: "GET", url: `/statistics/${start_timestamp}/${end_timestamp}` },
+                    { method: "GET", url: `/statistics/${startTimestamp}/${endTimestamp}` },
                     response => {
                         let rows = JSON.parse(response);
+                        
                         renderRows(rows.map(row => {
                             return createHtmlRow(row.category.name, row.total);
                         }));
+
                         updateTotal(rows.reduce((total, row) => {
                             return total + row.total;
                         }, 0))

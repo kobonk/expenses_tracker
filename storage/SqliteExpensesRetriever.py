@@ -1,4 +1,6 @@
+import datetime
 import html
+import time
 from expenses_tracker.expense.Expense import Expense
 from expenses_tracker.expense.Category import Category
 from expenses_tracker.expense.Statistics import Statistics
@@ -47,6 +49,13 @@ class SqliteExpensesRetriever():
         rows = self.__get_rows(selection)
 
         return self.__get_models_array(rows, "statistics")
+
+    def retrieve_statistics_for_months(self, number_of_months):
+        """Returns a list of Statistics for the provided amount of months"""
+        now = datetime.datetime.now()
+        current_year, current_month = now.year, now.month
+        first_day_of_month = datetime.datetime(current_year, current_month, 1)
+        return {}
 
     def retrieve_similar_expense_names(self, expense_name):
         """Returns a list of expense names similar to the one provided"""
