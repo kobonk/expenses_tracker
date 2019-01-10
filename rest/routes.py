@@ -86,8 +86,6 @@ class Categories(Resource):
         category = Category.from_json(json_data)
         persister = get_expenses_persister()
 
-        print(category.get_category_id())
-
         persister.add_category(category)
 
         return jsonify(category.to_json())
