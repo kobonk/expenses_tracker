@@ -88,7 +88,11 @@ class Categories(Resource):
 
         persister.add_category(category)
 
-        return jsonify(category.to_json())
+        expenses_retriever = get_expenses_retriever()
+        categories = expenses_retriever.retrieve_categories()
+        categories_as_json = convert_models_to_json(categories)
+
+        return jsonify(categories_as_json)
 
 class Statistics(Resource):
     def get(self, start_date, end_date):
