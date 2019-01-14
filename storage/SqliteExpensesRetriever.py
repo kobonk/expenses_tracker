@@ -1,5 +1,6 @@
 import datetime
 import html
+import itertools
 import pendulum
 import time
 from expenses_tracker.expense.Expense import Expense
@@ -71,7 +72,7 @@ class SqliteExpensesRetriever():
                             table_name=self.__expenses_table_name
                         ))
 
-        return list(set([expense_name for row in list_of_rows for expense_name in row]))
+        return list(set(itertools.chain(*list_of_rows)))
 
     def retrieve_categories(self):
         """Returns the list of Categories"""
