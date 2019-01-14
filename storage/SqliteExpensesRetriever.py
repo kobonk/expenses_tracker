@@ -64,14 +64,14 @@ class SqliteExpensesRetriever():
 
     def retrieve_similar_expense_names(self, expense_name):
         """Returns a list of expense names similar to the one provided"""
-        rows = self.__get_rows("""SELECT name FROM {table_name}
+        list_of_rows = self.__get_rows("""SELECT name FROM {table_name}
                         WHERE name LIKE '%{name}%'
                         ORDER BY name ASC""".format(
                             name=expense_name,
                             table_name=self.__expenses_table_name
                         ))
 
-        return list(set(rows))
+        return list(set([expense_name for row in list_of_rows for expense_name in row]))
 
     def retrieve_categories(self):
         """Returns the list of Categories"""
