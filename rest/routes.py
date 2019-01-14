@@ -95,9 +95,9 @@ class Categories(Resource):
         return jsonify(categories_as_json)
 
 class Statistics(Resource):
-    def get(self, start_date, end_date):
+    def get(self, number_of_months):
         expenses_retriever = get_expenses_retriever()
-        statistics = expenses_retriever.retrieve_category_statistics_between_dates(start_date, end_date)
+        statistics = expenses_retriever.retrieve_statistics_for_months(int(number_of_months))
         statistics_as_json = convert_models_to_json(statistics)
 
         return jsonify(statistics_as_json)
@@ -114,7 +114,7 @@ api.add_resource(Expenses, "/expenses/<amount>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")
-api.add_resource(Statistics, "/statistics/<start_date>/<end_date>")
+api.add_resource(Statistics, "/statistics/<number_of_months>")
 
 if __name__ == "__main__":
     app.run(debug=True)
