@@ -72,7 +72,10 @@ class SqliteExpensesRetriever():
                             table_name=self.__expenses_table_name
                         ))
 
-        return list(set(itertools.chain(*list_of_rows)))
+        rows = list(itertools.chain(*list_of_rows))
+        sorted_by_frequency = sorted(rows, key=rows.count, reverse=True)
+
+        return self.__leave_unique_values(sorted_by_frequency)
 
     def retrieve_categories(self):
         """Returns the list of Categories"""
@@ -82,6 +85,18 @@ class SqliteExpensesRetriever():
                         ))
 
         return self.__get_models_array(rows, "category")
+
+    def __leave_unique_values(self, list_of_values):
+        if not list:
+            return []
+
+        unique_list = []
+
+        for value in list_of_values:
+            if not value in unique_list:
+                unique_list.append(value)
+
+        return unique_list
 
     def __get_limit_query_string(self, amount):
         if amount:
