@@ -43,12 +43,12 @@ def convert_models_to_json(models):
     return list(map(lambda model: model.to_json(), models))
 
 class Expenses(Resource):
-    def get(self, amount):
+    def get(self, category_id, month):
         expenses_retriever = get_expenses_retriever()
-        expenses = expenses_retriever.retrieve_expenses(amount)
+        expenses = expenses_retriever.retrieve_expenses(category_id, month)
         expenses_as_json = convert_models_to_json(expenses)
 
-        return jsonify({ "results": expenses_as_json })
+        return expenses_as_json
 
     def __convert_expenses_to_json(self, expenses):
         return map(lambda expense: expense.to_json(), expenses)
@@ -110,7 +110,7 @@ class StatisticsMonthly(Resource):
 
         return jsonify(statistics_as_json)
 
-api.add_resource(Expenses, "/expenses/<amount>")
+api.add_resource(Expenses, "/expenses/<category_id>/<month>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")

@@ -19,17 +19,32 @@ class SqliteExpensesRetriever():
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
 
-    def retrieve_expenses(self, amount):
-        """Returns the list of Expenses"""
-        selection = """SELECT {ex_table}.expense_id, {ex_table}.name, {ex_table}.cost,
-                    {ex_table}.purchase_date, {cat_table}.category_id,
-                    {cat_table}.name AS 'category_name' FROM {ex_table}
+    def retrieve_expenses(self, category_id, month):
+        """Returns the list of Expenses for certain category and month"""
+        month_start = pendulum.parse(month + "-01")
+        month_end = pendulum.datetime(
+            month_start.year,
+            month_start.month,
+            month_start.days_in_month
+        )
+
+        selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
+                    {ex_table}.cost, {ex_table}.purchase_date,
+                    {cat_table}.category_id,
+                    {cat_table}.name AS 'category_name'
+                    FROM {ex_table}
                     LEFT JOIN {cat_table} ON
                     {ex_table}.category_id = {cat_table}.category_id
-                    ORDER BY purchase_date DESC{limit}""".format(
+                    WHERE {ex_table}.category_id = '{category_id}'
+                    AND {ex_table}.purchase_date
+                    BETWEEN {start_date} AND {end_date}
+                    ORDER BY purchase_date DESC""".format(
                         ex_table=self.__expenses_table_name,
                         cat_table=self.__categories_table_name,
-                        limit=self.__get_limit_query_string(amount))
+                        category_id=category_id,
+                        start_date=month_start.int_timestamp,
+                        end_date=month_end.int_timestamp)
+
         rows = self.__get_rows(selection)
 
         return self.__get_models_array(rows, "expense")
