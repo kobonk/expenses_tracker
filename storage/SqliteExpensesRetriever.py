@@ -25,7 +25,8 @@ class SqliteExpensesRetriever():
         month_end = pendulum.datetime(
             month_start.year,
             month_start.month,
-            month_start.days_in_month
+            month_start.days_in_month,
+            23, 59, 59
         )
 
         selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
@@ -60,7 +61,8 @@ class SqliteExpensesRetriever():
             last_day = pendulum.datetime(
                 first_day.year,
                 first_day.month,
-                first_day.days_in_month
+                first_day.days_in_month,
+                23, 59, 59
             )
 
             month_rows = self.__retrieve_statistics_rows_between_dates(
