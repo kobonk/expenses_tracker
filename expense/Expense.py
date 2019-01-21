@@ -2,6 +2,7 @@
 import uuid
 from datetime import date, datetime
 from expenses_tracker.expense.Category import Category
+import pendulum
 
 class Expense:
     """The class is a model for a single Expense"""
@@ -67,8 +68,7 @@ def convert_date_string_to_timestamp(date_string):
     """Converts date (YYYY-MM-DD) to a number"""
     try:
         year, month, day = map(int, date_string.split("-"))
-        date = datetime(year, month, day)
 
-        return date.timestamp()
+        return pendulum.datetime(year, month, day).int_timestamp
     except Exception as exception:
         raise ValueError(exception)
