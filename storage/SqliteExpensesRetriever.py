@@ -52,7 +52,7 @@ class SqliteExpensesRetriever():
 
     def retrieve_statistics_for_months(self, number_of_months):
         """Returns a list of Statistics for the provided amount of months"""
-        today = pendulum.today()
+        today = pendulum.today().set(tz="UTC")
         rows = []
         index = 0
 
