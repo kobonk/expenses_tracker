@@ -81,16 +81,22 @@ class SqliteExpensesRetriever():
         return self.__get_models_array(rows, "month-statistics")
 
     def retrieve_similar_expense_names(self, expense_name):
-        """Returns a list of expense names similar to the one provided"""
-        list_of_rows = self.__get_rows("""SELECT name FROM {table_name}
-                        WHERE name LIKE '%{name}%'
-                        ORDER BY name ASC""".format(
-                            name=expense_name,
-                            table_name=self.__expenses_table_name
+        """Returns a list of expense name and category pairs
+        for the provided expense name"""
+        list_of_rows = self.__get_rows("""SELECT {ex_table}.name,
+                        {cat_table}.name AS 'category_name' FROM {ex_table}
+                        LEFT JOIN {cat_table}
+                        ON {ex_table}.category_id = {cat_table}.category_id
+                        WHERE {ex_table}.name LIKE '%{name}%'
+                        ORDER BY {ex_table}.name ASC""".format(
+                            ex_table=self.__expenses_table_name,
+                            cat_table=self.__categories_table_name,
+                            name=expense_name
                         ))
 
-        rows = list(itertools.chain(*list_of_rows))
-        sorted_by_frequency = sorted(rows, key=rows.count, reverse=True)
+        rows = [{ "name": n, "category": c } for n, c in list_of_rows]
+        unique_rows = list(rows)
+        sorted_by_frequency = sorted(unique_rows, key=unique_rows.count, reverse=True)
 
         return self.__leave_unique_values(sorted_by_frequency)
 
