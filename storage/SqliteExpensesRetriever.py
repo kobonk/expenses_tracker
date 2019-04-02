@@ -19,6 +19,25 @@ class SqliteExpensesRetriever():
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
 
+    def retrieve_expense(self, expense_id):
+        """Returns an Expense from the database"""
+
+        selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
+                    {ex_table}.cost, {ex_table}.purchase_date,
+                    {cat_table}.category_id,
+                    {cat_table}.name AS 'category_name'
+                    FROM {ex_table}
+                    LEFT JOIN {cat_table} ON
+                    {ex_table}.category_id = {cat_table}.category_id
+                    WHERE {ex_table}.expense_id = '{expense_id}'""".format(
+                        ex_table=self.__expenses_table_name,
+                        cat_table=self.__categories_table_name,
+                        expense_id=expense_id)
+
+        rows = self.__get_rows(selection)
+
+        return self.__convert_table_row_to_expense(rows[0])
+
     def retrieve_expenses(self, category_id, month):
         """Returns the list of Expenses for certain category and month"""
         month_start = pendulum.parse(month + "-01")

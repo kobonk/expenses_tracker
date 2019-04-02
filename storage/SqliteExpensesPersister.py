@@ -3,6 +3,8 @@ import html
 import os
 import sqlite3
 from sqlite3 import Error
+from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
 class SqliteExpensesPersister():
     """Persists Expenses data in a database"""
@@ -50,6 +52,32 @@ class SqliteExpensesPersister():
 
         print("Added: {expense_string}".format(
             expense_string=expense.to_string()))
+
+    def update_expense(self, expense_id, changes):
+        """Updates existing Expense in the database"""
+
+        connection = self.__connection_provider.get_connection()
+        cursor = connection.cursor()
+
+        updates = ", ".join(["""{} = '{}'""".format(key, value) for key, value in changes.items()])
+
+        cursor.execute("""UPDATE {} SET {} WHERE expense_id = '{}'"""
+            .format(self.__expenses_table_name, updates, expense_id)
+        )
+
+        connection.commit()
+        connection.close()
+
+        retriever_factory = ExpensesRetrieverFactory()
+        retriever = retriever_factory.create("sqlite", DATABASE_PATH,
+                                        EXPENSES_TABLE_NAME,
+                                        CATEGORIES_TABLE_NAME)
+
+        expense = retriever.retrieve_expense(expense_id)
+
+        print("Updated: {}".format(expense.to_string()))
+
+        return expense
 
     def add_category(self, category):
         """Adds a new Category to the database"""

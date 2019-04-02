@@ -20,13 +20,6 @@ def page_not_found(e):
     """Renders default 404 Page Not Found template"""
     return render_template("404.html"), 404
 
-@app.route("/add-expense")
-def add_expense():
-    expenses_retriever = get_expenses_retriever()
-    categories = expenses_retriever.retrieve_categories()
-
-    return render_template("add_expense.html", categories=categories)
-
 def get_expenses_retriever():
     retriever_factory = ExpensesRetrieverFactory()
     return retriever_factory.create("sqlite", DATABASE_PATH,
@@ -53,13 +46,23 @@ class Expenses(Resource):
     def __convert_expenses_to_json(self, expenses):
         return map(lambda expense: expense.to_json(), expenses)
 
-class AddExpense(Resource):
-    def post(self):
+@app.route("/expense", methods = ["GET"])
+def add_expense():
+    if request.method == "GET":
         json_data = request.get_json(force=True)
         expense = Expense.from_json(json_data)
         persister = get_expenses_persister()
 
         persister.add_expense(expense)
+
+        return jsonify(expense.to_json())
+
+@app.route("/expense/<expense_id>", methods = ["GET", "PATCH", "DELETE"])
+def update_expense(expense_id):
+    if request.method == "PATCH":
+        json_data = request.get_json(force=True)
+        persister = get_expenses_persister()
+        expense = persister.update_expense(expense_id, json_data)
 
         return jsonify(expense.to_json())
 
@@ -112,7 +115,6 @@ class StatisticsMonthly(Resource):
 
 api.add_resource(Expenses, "/expenses/<category_id>/<month>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
-api.add_resource(AddExpense, "/expense")
 api.add_resource(Categories, "/categories")
 api.add_resource(Statistics, "/statistics/<number_of_months>")
 
