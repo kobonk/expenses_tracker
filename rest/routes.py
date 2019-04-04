@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_restful import Resource, Api
 from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
 from expenses_tracker.expense.Category import Category
-from expenses_tracker.expense.Expense import Expense
+from expenses_tracker.expense.Expense import Expense, convert_date_string_to_timestamp
 from expenses_tracker.storage.ExpensesPersisterFactory import ExpensesPersisterFactory
 from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
@@ -60,9 +60,18 @@ def add_expense():
 @app.route("/expense/<expense_id>", methods = ["GET", "PATCH", "DELETE"])
 def update_expense(expense_id):
     if request.method == "PATCH":
-        json_data = request.get_json(force=True)
         persister = get_expenses_persister()
-        expense = persister.update_expense(expense_id, json_data)
+
+        expenses_retriever = get_expenses_retriever()
+        expense = expenses_retriever.retrieve_expense(expense_id)
+
+        if expense:
+            json_data = request.get_json(force=True)
+
+            if "purchase_date" in json_data:
+                json_data["purchase_date"] = convert_date_string_to_timestamp(json_data["purchase_date"])
+
+            expense = persister.update_expense(expense_id, json_data)
 
         return jsonify(expense.to_json())
 
