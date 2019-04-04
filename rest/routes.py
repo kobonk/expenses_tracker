@@ -46,9 +46,9 @@ class Expenses(Resource):
     def __convert_expenses_to_json(self, expenses):
         return map(lambda expense: expense.to_json(), expenses)
 
-@app.route("/expense", methods = ["GET"])
+@app.route("/expense", methods = ["POST"])
 def add_expense():
-    if request.method == "GET":
+    if request.method == "POST":
         json_data = request.get_json(force=True)
         expense = Expense.from_json(json_data)
         persister = get_expenses_persister()
