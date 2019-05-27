@@ -46,6 +46,22 @@ class Expenses(Resource):
     def __convert_expenses_to_json(self, expenses):
         return map(lambda expense: expense.to_json(), expenses)
 
+@app.route("/summary/<expense_name>", methods = ["GET"])
+def get_summary(expense_name):
+    if request.method == "GET":
+        return jsonify([
+            {
+                'name': expense_name,
+                'month': '2019-01',
+                'cost': 1234
+            },
+            {
+                'name': expense_name,
+                'month': '2019-02',
+                'cost': 1009
+            }
+        ])
+
 @app.route("/expense", methods = ["POST"])
 def add_expense():
     if request.method == "POST":
