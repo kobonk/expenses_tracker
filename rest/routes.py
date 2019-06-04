@@ -35,6 +35,22 @@ def get_expenses_persister():
 def convert_models_to_json(models):
     return list(map(lambda model: model.to_json(), models))
 
+def group_expenses_by_months(expenses):
+    grouped_expenses = {}
+
+    if not expenses:
+        return grouped_expenses
+
+    for expense in expenses:
+        month = expense.get_purchase_date_string()[0:7]
+
+        if month in grouped_expenses:
+            grouped_expenses[month].append(expense.to_json())
+        else:
+            grouped_expenses[month] = [expense.to_json()]
+
+    return grouped_expenses
+
 class Expenses(Resource):
     def get(self, category_id, month):
         expenses_retriever = get_expenses_retriever()
@@ -46,21 +62,14 @@ class Expenses(Resource):
     def __convert_expenses_to_json(self, expenses):
         return map(lambda expense: expense.to_json(), expenses)
 
-@app.route("/summary/<expense_name>", methods = ["GET"])
-def get_summary(expense_name):
+@app.route("/filter/<expense_name>", methods=["GET"])
+def filter_expenses(expense_name):
     if request.method == "GET":
-        return jsonify([
-            {
-                'name': expense_name,
-                'month': '2019-01',
-                'cost': 1234
-            },
-            {
-                'name': expense_name,
-                'month': '2019-02',
-                'cost': 1009
-            }
-        ])
+        expenses_retriever = get_expenses_retriever()
+        expenses = expenses_retriever.filter_expenses(expense_name)
+
+        if expenses:
+            return jsonify(group_expenses_by_months(expenses))
 
 @app.route("/expense", methods = ["POST"])
 def add_expense():

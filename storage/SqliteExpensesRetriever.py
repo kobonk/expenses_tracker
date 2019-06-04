@@ -19,6 +19,25 @@ class SqliteExpensesRetriever():
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
 
+    def filter_expenses(self, expense_name):
+        """Returns a list of Expenses with matching expense_name"""
+
+        selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
+                    {ex_table}.cost, {ex_table}.purchase_date,
+                    {cat_table}.category_id,
+                    {cat_table}.name AS 'category_name'
+                    FROM {ex_table}
+                    LEFT JOIN {cat_table} ON
+                    {ex_table}.category_id = {cat_table}.category_id
+                    WHERE {ex_table}.name COLLATE UTF8_GENERAL_CI LIKE '%{expense_name}%'""".format(
+                        ex_table=self.__expenses_table_name,
+                        cat_table=self.__categories_table_name,
+                        expense_name=expense_name)
+
+        rows = self.__get_rows(selection)
+
+        return self.__get_models_array(rows, "expense")
+
     def retrieve_expense(self, expense_id):
         """Returns an Expense from the database"""
 
