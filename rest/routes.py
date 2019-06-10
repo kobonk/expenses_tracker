@@ -51,17 +51,6 @@ def group_expenses_by_months(expenses):
 
     return grouped_expenses
 
-class Expenses(Resource):
-    def get(self, category_id, month):
-        expenses_retriever = get_expenses_retriever()
-        expenses = expenses_retriever.retrieve_expenses(category_id, month)
-        expenses_as_json = convert_models_to_json(expenses)
-
-        return expenses_as_json
-
-    def __convert_expenses_to_json(self, expenses):
-        return map(lambda expense: expense.to_json(), expenses)
-
 @app.route("/filter/<expense_name>", methods=["GET"])
 def filter_expenses(expense_name):
     if request.method == "GET":
@@ -99,6 +88,18 @@ def update_expense(expense_id):
             expense = persister.update_expense(expense_id, json_data)
 
         return jsonify(expense.to_json())
+
+@app.route("/expenses/<starting_month>/<number_of_months>", methods = ["GET"])
+def retrieve_expenses(starting_month, number_of_months):
+    """Returns a JSON with all Expenses for the selected period"""
+    if request.method != "GET":
+        return None
+
+    retriever = get_expenses_retriever()
+    expenses = retriever.retrieve_expenses(starting_month, int(number_of_months))
+    expenses_as_json = convert_models_to_json(expenses)
+
+    return jsonify(expenses_as_json)
 
 class ExpenseNames(Resource):
     def get(self, name):
@@ -147,7 +148,18 @@ class StatisticsMonthly(Resource):
 
         return jsonify(statistics_as_json)
 
-api.add_resource(Expenses, "/expenses/<category_id>/<month>")
+# class Expenses(Resource):
+#     def get(self, category_id, month):
+#         expenses_retriever = get_expenses_retriever()
+#         expenses = expenses_retriever.retrieve_expenses(category_id, month)
+#         expenses_as_json = convert_models_to_json(expenses)
+#
+#         return expenses_as_json
+#
+#         def __convert_expenses_to_json(self, expenses):
+#             return map(lambda expense: expense.to_json(), expenses)
+
+# api.add_resource(Expenses, "/expenses/<category_id>/<month>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(Categories, "/categories")
 api.add_resource(Statistics, "/statistics/<starting_month>/<number_of_months>")
