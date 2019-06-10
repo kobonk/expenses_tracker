@@ -132,9 +132,9 @@ class Categories(Resource):
         return jsonify(categories_as_json)
 
 class Statistics(Resource):
-    def get(self, number_of_months):
+    def get(self, starting_month, number_of_months):
         expenses_retriever = get_expenses_retriever()
-        statistics = expenses_retriever.retrieve_statistics_for_months(int(number_of_months))
+        statistics = expenses_retriever.retrieve_statistics_for_months(starting_month, int(number_of_months))
         statistics_as_json = convert_models_to_json(statistics)
 
         return jsonify(statistics_as_json)
@@ -150,7 +150,7 @@ class StatisticsMonthly(Resource):
 api.add_resource(Expenses, "/expenses/<category_id>/<month>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(Categories, "/categories")
-api.add_resource(Statistics, "/statistics/<number_of_months>")
+api.add_resource(Statistics, "/statistics/<starting_month>/<number_of_months>")
 
 if __name__ == "__main__":
     app.run(debug=True)

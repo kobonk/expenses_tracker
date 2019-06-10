@@ -88,14 +88,14 @@ class SqliteExpensesRetriever():
 
         return self.__get_models_array(rows, "expense")
 
-    def retrieve_statistics_for_months(self, number_of_months):
+    def retrieve_statistics_for_months(self, starting_month, number_of_months):
         """Returns a list of Statistics for the provided amount of months"""
-        today = pendulum.today().set(tz="UTC")
+        start_date = pendulum.parse(starting_month).set(tz="UTC")
         rows = []
         index = 0
 
         while index < number_of_months:
-            first_day = today.subtract(months=index).set(day=1)
+            first_day = start_date.subtract(months=index).set(day=1)
             last_day = pendulum.datetime(
                 first_day.year,
                 first_day.month,
