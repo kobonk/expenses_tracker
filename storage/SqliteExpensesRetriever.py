@@ -114,6 +114,20 @@ class SqliteExpensesRetriever():
 
         return self.__get_models_array(rows, "month-statistics")
 
+    def retrieve_months(self):
+        """Returns a list of months which may have Expenses registered"""
+        oldest_timestamp = self.__get_rows("""SELECT {ex_table}.purchase_date
+                                              FROM {ex_table}
+                                              ORDER BY {ex_table}.purchase_date ASC
+                                              LIMIT 1""".format(ex_table=self.__expenses_table_name))
+
+        oldest_date = pendulum.from_timestamp(int(oldest_timestamp[0][0]))
+        period = pendulum.period(oldest_date, pendulum.now())
+
+        months = [month.format("YYYY-MM") for month in period.range("months")]
+
+        return months
+
     def retrieve_similar_expense_names(self, expense_name):
         """Returns a list of expense name and category pairs
         for the provided expense name"""

@@ -101,6 +101,17 @@ def retrieve_expenses(starting_month, number_of_months):
 
     return jsonify(expenses_as_json)
 
+@app.route("/months", methods = ["GET"])
+def retrieve_months():
+    """Returns a JSON array with all available months"""
+    if request.method != "GET":
+        return None
+
+    retriever = get_expenses_retriever()
+    months = retriever.retrieve_months()
+
+    return jsonify(months)
+
 class ExpenseNames(Resource):
     def get(self, name):
         if not name:
