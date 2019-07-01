@@ -1,4 +1,5 @@
 **/__pycache__/
 dbs/**/*
 money.ico
-*.bat
+run.bat
+run_server.bat
