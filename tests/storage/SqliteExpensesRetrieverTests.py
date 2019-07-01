@@ -1,7 +1,7 @@
 import re
 import unittest
-from expenses_tracker.storage.SqliteExpensesRetriever import SqliteExpensesRetriever
-from expenses_tracker.tests.TestValidationUtils import (
+from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
+from tests.TestValidationUtils import (
     validate_non_empty_string,
     validate_object_with_methods,
     validate_provided

@@ -1,11 +1,11 @@
 from flask import Flask, jsonify, render_template, request, make_response
 from flask_cors import CORS
 from flask_restful import Resource, Api
-from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
-from expenses_tracker.expense.Category import Category
-from expenses_tracker.expense.Expense import Expense, convert_date_string_to_timestamp
-from expenses_tracker.storage.ExpensesPersisterFactory import ExpensesPersisterFactory
-from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
+from const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+from expense.Category import Category
+from expense.Expense import Expense, convert_date_string_to_timestamp
+from storage.ExpensesPersisterFactory import ExpensesPersisterFactory
+from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
 app = Flask(__name__)
 CORS(app)

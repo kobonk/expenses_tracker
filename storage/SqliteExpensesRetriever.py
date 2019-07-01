@@ -3,9 +3,9 @@ import html
 import itertools
 import pendulum
 import time
-from expenses_tracker.expense.Expense import Expense
-from expenses_tracker.expense.Category import Category
-from expenses_tracker.expense.MonthStatistics import MonthStatistics
+from expense.Expense import Expense
+from expense.Category import Category
+from expense.MonthStatistics import MonthStatistics
 
 class SqliteExpensesRetriever():
 

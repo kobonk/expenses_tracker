@@ -3,3 +3,4 @@ dbs/**/*
 money.ico
 run.bat
 run_server.bat
+*.egg-info

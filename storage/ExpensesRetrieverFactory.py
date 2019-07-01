@@ -1,5 +1,5 @@
-from expenses_tracker.storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
-from expenses_tracker.storage.SqliteExpensesRetriever import SqliteExpensesRetriever
+from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
+from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 
 class ExpensesRetrieverFactory:
     def create(self, type, database_path, expenses_table_name,

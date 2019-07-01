@@ -3,8 +3,8 @@ import html
 import os
 import sqlite3
 from sqlite3 import Error
-from expenses_tracker.const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
-from expenses_tracker.storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
+from const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
 class SqliteExpensesPersister():
     """Persists Expenses data in a database"""

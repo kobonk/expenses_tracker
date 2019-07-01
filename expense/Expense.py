@@ -1,7 +1,7 @@
 """The module contains Expense class"""
 import uuid
 from datetime import date, datetime
-from expenses_tracker.expense.Category import Category
+from expense.Category import Category
 import pendulum
 
 class Expense:
