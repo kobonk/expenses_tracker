@@ -3,4 +3,5 @@ dbs/**/*
 money.ico
 run.bat
 run_server.bat
+.vscode
 *.egg-info
