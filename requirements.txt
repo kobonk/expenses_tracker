@@ -1,6 +1,5 @@
 aniso8601==4.0.1
 Click==7.0
-colorama==0.4.1
 Flask==1.0.2
 Flask-Cors==3.0.7
 Flask-RESTful==0.3.7
@@ -12,5 +11,4 @@ python-dateutil==2.7.5
 pytz==2018.9
 pytzdata==2018.7
 six==1.12.0
-texttable==1.5.0
 Werkzeug==0.14.1
