@@ -5,7 +5,6 @@ import pendulum
 import time
 from expense.Expense import Expense
 from expense.Category import Category
-from expense.MonthStatistics import MonthStatistics
 
 class SqliteExpensesRetriever():
 
@@ -84,36 +83,6 @@ class SqliteExpensesRetriever():
 
         return self.__get_models_array(rows, "expense")
 
-    def retrieve_statistics_for_months(self, starting_month, number_of_months):
-        """Returns a list of Statistics for the provided amount of months"""
-        start_date = pendulum.parse(starting_month).set(tz="UTC")
-        rows = []
-        index = 0
-
-        while index < number_of_months:
-            first_day = start_date.subtract(months=index).set(day=1)
-            last_day = pendulum.datetime(
-                first_day.year,
-                first_day.month,
-                first_day.days_in_month,
-                23, 59, 59
-            )
-
-            month_rows = self.__retrieve_statistics_rows_between_dates(
-                first_day.int_timestamp,
-                last_day.int_timestamp
-            )
-
-            month_rows_with_dates = list(map(
-                lambda row: row + tuple([first_day.format("YYYY-MM")]),
-                month_rows
-            ))
-
-            rows = rows + month_rows_with_dates
-            index += 1
-
-        return self.__get_models_array(rows, "month-statistics")
-
     def retrieve_months(self):
         """Returns a list of months which may have Expenses registered"""
         oldest_timestamp = self.__get_rows("""SELECT {ex_table}.purchase_date
@@ -169,29 +138,6 @@ class SqliteExpensesRetriever():
 
         return unique_list
 
-    def __get_limit_query_string(self, amount):
-        if amount:
-            return " LIMIT {amount}".format(amount=amount)
-
-        return ""
-
-    def __retrieve_statistics_rows_between_dates(self, start_date, end_date):
-        """Returns a list table rows between start and end date"""
-        selection = """SELECT SUM({ex_table}.cost) AS 'total',
-                    {cat_table}.category_id,
-                    {cat_table}.name AS 'category_name' FROM {ex_table}
-                    LEFT JOIN {cat_table} ON
-                    {ex_table}.category_id = {cat_table}.category_id
-                    WHERE {ex_table}.purchase_date
-                    BETWEEN {start_date} AND {end_date}
-                    GROUP BY category_name
-                    ORDER BY category_name ASC""".format(
-                        ex_table=self.__expenses_table_name,
-                        cat_table=self.__categories_table_name,
-                        start_date=start_date, end_date=end_date)
-
-        return self.__get_rows(selection)
-
     def __get_rows(self, query):
         connection = self.__connection_provider.get_connection()
         cursor = connection.cursor()
@@ -216,9 +162,6 @@ class SqliteExpensesRetriever():
         if model_type == "category":
             return self.__convert_table_row_to_category
 
-        if model_type == "month-statistics":
-            return self.__convert_table_row_to_month_statistics
-
     def __convert_table_row_to_expense(self, table_row):
         return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
                        table_row[3], self.__convert_table_row_to_category(
@@ -227,11 +170,6 @@ class SqliteExpensesRetriever():
 
     def __convert_table_row_to_category(self, table_row):
         return Category(table_row[0], html.unescape(table_row[1]))
-
-    def __convert_table_row_to_month_statistics(self, table_row):
-        category = Category(table_row[1], html.unescape(table_row[2]))
-
-        return MonthStatistics(category, float(table_row[0]), table_row[3])
 
     def __validate_expenses_table_name(self, expenses_table_name):
         if (not expenses_table_name or

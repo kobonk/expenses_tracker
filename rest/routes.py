@@ -143,37 +143,8 @@ class Categories(Resource):
 
         return jsonify(categories_as_json)
 
-class Statistics(Resource):
-    def get(self, starting_month, number_of_months):
-        expenses_retriever = get_expenses_retriever()
-        statistics = expenses_retriever.retrieve_statistics_for_months(starting_month, int(number_of_months))
-        statistics_as_json = convert_models_to_json(statistics)
-
-        return jsonify(statistics_as_json)
-
-class StatisticsMonthly(Resource):
-    def get(self, number_of_months):
-        expenses_retriever = get_expenses_retriever()
-        statistics = expenses_retriever.retrieve_statistics_for_months(number_of_months)
-        statistics_as_json = convert_models_to_json(statistics)
-
-        return jsonify(statistics_as_json)
-
-# class Expenses(Resource):
-#     def get(self, category_id, month):
-#         expenses_retriever = get_expenses_retriever()
-#         expenses = expenses_retriever.retrieve_expenses(category_id, month)
-#         expenses_as_json = convert_models_to_json(expenses)
-#
-#         return expenses_as_json
-#
-#         def __convert_expenses_to_json(self, expenses):
-#             return map(lambda expense: expense.to_json(), expenses)
-
-# api.add_resource(Expenses, "/expenses/<category_id>/<month>")
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(Categories, "/categories")
-api.add_resource(Statistics, "/statistics/<starting_month>/<number_of_months>")
 
 if __name__ == "__main__":
     app.run(debug=True)
