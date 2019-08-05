@@ -41,7 +41,7 @@ class SqliteExpensesRetriever():
         """Returns the most common price for provided Expense name"""
         selection = """SELECT name, cost, COUNT(name) as 'counter'
                     FROM {ex_table}
-                    WHERE name LIKE '%{ex_name}%'
+                    WHERE name LIKE '{ex_name}'
                     GROUP BY name, cost
                     ORDER BY COUNT(name) DESC
                     LIMIT 1""".format(
@@ -51,10 +51,10 @@ class SqliteExpensesRetriever():
 
         rows = self.__get_rows(selection)
 
-        if rows[0][2] >= 5:
-            return rows[0][1]
+        if not rows or rows[0][2] < 5:
+            return 0
 
-        return 0
+        return rows[0][1]
 
     def retrieve_expense(self, expense_id):
         """Returns an Expense from the database"""

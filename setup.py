@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='Expenses Tracker Backend',
-      version='1.0.1',
+      version='1.0.2',
       description='Backend for Expenses Tracker',
       url='https://github.com/kobonk/expenses_tracker',
       author='Kobonk',
