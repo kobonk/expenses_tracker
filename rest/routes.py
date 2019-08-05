@@ -51,6 +51,13 @@ def group_expenses_by_months(expenses):
 
     return grouped_expenses
 
+@app.route("/cost/<expense_name>", methods=["GET"])
+def get_common_cost(expense_name):
+    if request.method == "GET":
+        expenses_retriever = get_expenses_retriever()
+
+        return jsonify(expenses_retriever.retrieve_common_expense_cost(expense_name))
+
 @app.route("/filter/<expense_name>", methods=["GET"])
 def filter_expenses(expense_name):
     if request.method == "GET":

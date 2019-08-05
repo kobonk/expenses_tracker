@@ -37,6 +37,25 @@ class SqliteExpensesRetriever():
 
         return self.__get_models_array(rows, "expense")
 
+    def retrieve_common_expense_cost(self, expense_name):
+        """Returns the most common price for provided Expense name"""
+        selection = """SELECT name, cost, COUNT(name) as 'counter'
+                    FROM {ex_table}
+                    WHERE name LIKE '%{ex_name}%'
+                    GROUP BY name, cost
+                    ORDER BY COUNT(name) DESC
+                    LIMIT 1""".format(
+                        ex_table=self.__expenses_table_name,
+                        ex_name=expense_name
+                    )
+
+        rows = self.__get_rows(selection)
+
+        if rows[0][2] >= 5:
+            return rows[0][1]
+
+        return 0
+
     def retrieve_expense(self, expense_id):
         """Returns an Expense from the database"""
 
@@ -76,8 +95,6 @@ class SqliteExpensesRetriever():
                         cat_table=self.__categories_table_name,
                         start_date=month_start.int_timestamp,
                         end_date=month_end.int_timestamp)
-
-        print(month_start)
 
         rows = self.__get_rows(selection)
 
