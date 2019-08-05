@@ -8,18 +8,36 @@ from tests.TestValidationUtils import (
 )
 
 class ConnectionProvider:
+    def __init__(self, execute_callback=None, fetchall_callback=None):
+        self.execute_callback = execute_callback
+        self.fetchall_callback = fetchall_callback
+
     def get_connection(self):
-        return Connection()
+        return Connection(self.execute_callback, self.fetchall_callback)
 
 class Connection:
+    def __init__(self, execute_callback=None, fetchall_callback=None):
+        self.execute_callback = execute_callback
+        self.fetchall_callback = fetchall_callback
+
     def cursor(self):
-        return Cursor()
+        return Cursor(self.execute_callback, self.fetchall_callback)
 
 class Cursor:
+    def __init__(self, execute_callback=None, fetchall_callback=None):
+        self.execute_callback = execute_callback
+        self.fetchall_callback = fetchall_callback
+
     def execute(self, query):
+        if self.execute_callback:
+            return self.execute_callback(query)
+
         return 112
 
     def fetchall(self):
+        if self.fetchall_callback:
+            return self.fetchall_callback()
+
         return 123
 
 class TestSqliteExpensesRetriever(unittest.TestCase):
@@ -66,15 +84,39 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
                 self.connection_provider = value
                 self.create()
 
-            
+
             self.assertTrue(
                 re.compile("InvalidArgument:.*connection_provider.*"
                            "{method_name}".format(method_name=method_name)
                 ).match(str(cm.exception))
             )
-        
+
         validate_provided(validate_existence)
         validate_object_with_methods(self, ["get_connection"], validate_methods)
+
+    def test_retrieve_common_expense_cost_value_if_frequent(self):
+        def fetchall_callback():
+            return [('Test Expense', 4321, 8)]
+
+        self.connection_provider = ConnectionProvider(fetchall_callback=fetchall_callback)
+        self.sut = self.create()
+
+        self.assertEqual(
+            self.sut.retrieve_common_expense_cost("TEST"),
+            4321
+        )
+
+    def test_retrieve_common_expense_cost_zero_value_if_infrequent(self):
+        def fetchall_callback():
+            return [('Test Expense', 4321, 4)]
+
+        self.connection_provider = ConnectionProvider(fetchall_callback=fetchall_callback)
+        self.sut = self.create()
+
+        self.assertEqual(
+            self.sut.retrieve_common_expense_cost("TEST"),
+            0
+        )
 
 if __name__ is "__main__":
     unittest.main()
