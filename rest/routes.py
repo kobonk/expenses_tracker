@@ -152,6 +152,3 @@ class Categories(Resource):
 
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(Categories, "/categories")
-
-if __name__ == "__main__":
-    app.run(debug=True)

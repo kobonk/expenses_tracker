@@ -30,5 +30,4 @@ This will create necessary links between local dependencies of the application.
 
 Finally, to run the application you need only to execute the following command.
 
-    python rest/routes.py
-    
+    python main.py
