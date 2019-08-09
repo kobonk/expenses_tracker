@@ -5,8 +5,9 @@ import pendulum
 import time
 from expense.Expense import Expense
 from expense.Category import Category
+from storage.ExpensesRetrieverBase import ExpensesRetrieverBase
 
-class SqliteExpensesRetriever():
+class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
     def __init__(self, expenses_table_name, categories_table_name,
                  connection_provider):
@@ -17,6 +18,14 @@ class SqliteExpensesRetriever():
         self.__expenses_table_name = expenses_table_name
         self.__categories_table_name = categories_table_name
         self.__connection_provider = connection_provider
+
+    def ensure_necessary_tables_exist(self):
+        """
+        Checks if necessary tables exist in the database
+        and adds them if they don't.
+        """
+
+        self.__ensure_expenses_table_exists()
 
     def filter_expenses(self, expense_name):
         """Returns a list of Expenses with matching expense_name"""
@@ -33,7 +42,7 @@ class SqliteExpensesRetriever():
                         cat_table=self.__categories_table_name,
                         expense_name=expense_name)
 
-        rows = self.__get_rows(selection)
+        rows = self.__execute_query(selection)
 
         return self.__get_models_array(rows, "expense")
 
@@ -49,7 +58,7 @@ class SqliteExpensesRetriever():
                         ex_name=expense_name
                     )
 
-        rows = self.__get_rows(selection)
+        rows = self.__execute_query(selection)
 
         if not rows or rows[0][2] < 5:
             return 0
@@ -71,7 +80,7 @@ class SqliteExpensesRetriever():
                         cat_table=self.__categories_table_name,
                         expense_id=expense_id)
 
-        rows = self.__get_rows(selection)
+        rows = self.__execute_query(selection)
 
         return self.__convert_table_row_to_expense(rows[0])
 
@@ -96,13 +105,13 @@ class SqliteExpensesRetriever():
                         start_date=month_start.int_timestamp,
                         end_date=month_end.int_timestamp)
 
-        rows = self.__get_rows(selection)
+        rows = self.__execute_query(selection)
 
         return self.__get_models_array(rows, "expense")
 
     def retrieve_months(self):
         """Returns a list of months which may have Expenses registered"""
-        oldest_timestamp = self.__get_rows("""SELECT {ex_table}.purchase_date
+        oldest_timestamp = self.__execute_query("""SELECT {ex_table}.purchase_date
                                               FROM {ex_table}
                                               ORDER BY {ex_table}.purchase_date ASC
                                               LIMIT 1""".format(ex_table=self.__expenses_table_name))
@@ -117,7 +126,7 @@ class SqliteExpensesRetriever():
     def retrieve_similar_expense_names(self, expense_name):
         """Returns a list of expense name and category pairs
         for the provided expense name"""
-        list_of_rows = self.__get_rows("""SELECT {ex_table}.name,
+        list_of_rows = self.__execute_query("""SELECT {ex_table}.name,
                         {cat_table}.name AS 'category_name' FROM {ex_table}
                         LEFT JOIN {cat_table}
                         ON {ex_table}.category_id = {cat_table}.category_id
@@ -136,7 +145,7 @@ class SqliteExpensesRetriever():
 
     def retrieve_categories(self):
         """Returns the list of Categories"""
-        rows = self.__get_rows("""SELECT * FROM {table_name}
+        rows = self.__execute_query("""SELECT * FROM {table_name}
                         ORDER BY name ASC""".format(
                             table_name=self.__categories_table_name
                         ))
@@ -155,7 +164,7 @@ class SqliteExpensesRetriever():
 
         return unique_list
 
-    def __get_rows(self, query):
+    def __execute_query(self, query):
         connection = self.__connection_provider.get_connection()
         cursor = connection.cursor()
 
@@ -188,6 +197,35 @@ class SqliteExpensesRetriever():
     def __convert_table_row_to_category(self, table_row):
         return Category(table_row[0], html.unescape(table_row[1]))
 
+    def __ensure_expenses_table_exists(self):
+        columns = [
+            ("expense_id", "TEXT PRIMARY KEY"),
+            ("name", "TEXT"),
+            ("cost", "REAL"),
+            ("purchase_date", "REAL"),
+            ("category_id", "TEXT"),
+            ("tag_ids", "TEXT"),
+        ]
+
+        selection = """CREATE TABLE IF NOT EXISTS {} ({})""".format(
+                    self.__expenses_table_name, create_columns_schema(columns))
+
+        self.__execute_query(selection)
+        self.__ensure_table_columns_exist(self.__expenses_table_name, columns)
+
+    def __ensure_table_columns_exist(self, table_name, columns):
+        selection = "PRAGMA table_info({})".format(table_name)
+
+        rows = self.__execute_query(selection)
+        column_names = [row[1] for row in rows]
+
+        for column, schema in columns:
+            if not column in column_names:
+                selection = "ALTER TABLE {} ADD COLUMN {} {}".format(
+                             table_name, column, schema)
+
+                self.__execute_query(selection)
+
     def __validate_expenses_table_name(self, expenses_table_name):
         if (not expenses_table_name or
             not isinstance(expenses_table_name, str)):
@@ -209,3 +247,6 @@ class SqliteExpensesRetriever():
             not callable(connection_provider.get_connection)):
             raise ValueError("InvalidArgument: connection_provider must have "
                              "get_connection method")
+
+def create_columns_schema(columns):
+    return ", ".join("{} {}".format(name, schema) for name, schema in columns)
