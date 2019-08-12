@@ -3,23 +3,23 @@ import re
 class TestStub(object):
     pass
 
-def validate_non_empty_string(self, function_raising_error, exception_message):
+def validate_non_empty_string(sut, function_raising_error, exception_message):
     values = [None, False, True, {}, [], 123]
     error_regex = re.compile(exception_message)
 
     for value in values:
-        with self.subTest(value=value):
-            with self.assertRaises(ValueError) as cm:
+        with sut.subTest(value=value):
+            with sut.assertRaises(ValueError) as cm:
                 function_raising_error(value)
 
-            self.assertTrue(error_regex.match(str(cm.exception)))
+            sut.assertTrue(error_regex.match(str(cm.exception)))
 
 def validate_provided(callback):
     callback(None)
 
-def validate_object_with_methods(self, method_names, callback):
+def validate_object_with_methods(sut, method_names, callback):
     for method_name in method_names:
-        with self.subTest(method_name=method_name):
+        with sut.subTest(method_name=method_name):
             selected_methods = [name for name in method_names if name != method_name]
 
             stub_object = TestStub()
@@ -28,15 +28,25 @@ def validate_object_with_methods(self, method_names, callback):
 
             callback(stub_object, method_name)
 
-def validate_dict_keys(self, function_raising_error, exception_message, keys):
+def validate_dict_keys(sut, function_raising_error, exception_message, keys):
     value = dict.fromkeys(keys, "xyz")
     error_regex = re.compile(exception_message)
 
     for key in keys:
         value_without_key = {k: value[k] for k in value if k is not key}
 
-        with self.subTest(value=value_without_key):
-            with self.assertRaises(ValueError) as cm:
+        with sut.subTest(value=value_without_key):
+            with sut.assertRaises(ValueError) as cm:
                 function_raising_error(value_without_key)
 
-            self.assertTrue(error_regex.match(str(cm.exception)))
+            sut.assertTrue(error_regex.match(str(cm.exception)))
+
+def validate_dict(sut, function_raising_error, value, validator_map):
+    for key, (validate, exception_message) in validator_map.items():
+        def callback(property_value):
+            updated_value = value.copy()
+            updated_value[key] = property_value
+
+            function_raising_error(updated_value)
+
+        validate(sut, callback, exception_message)

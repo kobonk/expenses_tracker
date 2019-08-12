@@ -28,8 +28,7 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 def get_expenses_retriever():
-    retriever_factory = ExpensesRetrieverFactory()
-    return retriever_factory.create("sqlite", DATABASE_PATH,
+    return ExpensesRetrieverFactory.create("sqlite", DATABASE_PATH,
                                     DATABASE_TABLES)
 
 def get_expenses_persister():

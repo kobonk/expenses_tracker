@@ -2,6 +2,7 @@ import re
 import unittest
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 from tests.TestValidationUtils import (
+    validate_dict,
     validate_non_empty_string,
     validate_object_with_methods,
     validate_provided
@@ -42,31 +43,42 @@ class Cursor:
 
 class TestSqliteExpensesRetriever(unittest.TestCase):
     def create(self):
-        return SqliteExpensesRetriever(self.expenses_table_name,
-                                       self.categories_table_name,
+        return SqliteExpensesRetriever(self.database_tables,
                                        self.connection_provider)
 
     def setUp(self):
         self.expenses_table_name = "expenses"
         self.categories_table_name = "categories"
+        self.tags_table_name = "tags"
+
+        self.database_tables = {
+            "expenses": self.expenses_table_name,
+            "categories": self.categories_table_name,
+            "tags": self.tags_table_name
+        }
+
         self.connection_provider = ConnectionProvider()
         self.sut = self.create()
 
-    def test_expenses_table_name_validation(self):
-        def validate_expenses_table_name(value):
-            self.expenses_table_name = value
+    def test_validates_database_tables(self):
+        def validate_database_tables(value):
+            self.database_tables = value
             self.create()
 
-        validate_non_empty_string(self, validate_expenses_table_name,
-                                  "InvalidArgument:.*expenses_table_name")
+        validator_map = {
+            "expenses": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.expenses"),
+            "categories": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.categories"),
+            "tags": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.tags")
+        }
 
-    def test_categories_table_name_validation(self):
-        def validate_categories_table_name(value):
-            self.categories_table_name = value
-            self.create()
-
-        validate_non_empty_string(self, validate_categories_table_name,
-                                  "InvalidArgument:.*categories_table_name")
+        validate_dict(self, validate_database_tables, self.database_tables,
+                      validator_map)
 
     def test_connection_provider_validation(self):
         def validate_existence(value):
@@ -98,7 +110,8 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         def fetchall_callback():
             return [('Test Expense', 4321, 8)]
 
-        self.connection_provider = ConnectionProvider(fetchall_callback=fetchall_callback)
+        self.connection_provider = ConnectionProvider(
+                                    fetchall_callback=fetchall_callback)
         self.sut = self.create()
 
         self.assertEqual(
@@ -110,13 +123,86 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         def fetchall_callback():
             return [('Test Expense', 4321, 4)]
 
-        self.connection_provider = ConnectionProvider(fetchall_callback=fetchall_callback)
+        self.connection_provider = ConnectionProvider(
+                                    fetchall_callback=fetchall_callback)
         self.sut = self.create()
 
         self.assertEqual(
             self.sut.retrieve_common_expense_cost("TEST"),
             0
         )
+
+    def test_ensures_expenses_table_exist_in_database(self):
+        db_queries = []
+
+        def execute_callback(query):
+            db_queries.append(query)
+
+        def fetchall_callback():
+            if db_queries[-1].startswith("PRAGMA"):
+                return [(0, "fake_column_name", "TEXT")]
+
+        self.connection_provider = ConnectionProvider(
+                                    execute_callback=execute_callback,
+                                    fetchall_callback=fetchall_callback)
+        self.sut = self.create()
+
+        self.sut.ensure_necessary_tables_exist()
+
+        expected_db_query = "CREATE TABLE IF NOT EXISTS {} (expense_id" \
+                            " TEXT PRIMARY KEY, name TEXT, cost REAL," \
+                            " purchase_date REAL, category_id TEXT," \
+                            " tag_ids TEXT)".format(self.expenses_table_name)
+
+        self.assertEqual(db_queries[0], expected_db_query)
+
+    def test_ensures_categories_table_exists_in_database(self):
+        db_queries = []
+
+        def execute_callback(query):
+            db_queries.append(query)
+
+        def fetchall_callback():
+            if db_queries[-1].startswith("PRAGMA"):
+                return [(0, "fake_column_name", "TEXT")]
+
+        self.connection_provider = ConnectionProvider(
+                                    execute_callback=execute_callback,
+                                    fetchall_callback=fetchall_callback)
+
+        self.sut = self.create()
+
+        self.sut.ensure_necessary_tables_exist()
+
+        expected_db_query = "CREATE TABLE IF NOT EXISTS {} (category_id" \
+                            " TEXT PRIMARY KEY, name TEXT)".format(
+                                self.categories_table_name)
+
+        self.assertEqual(db_queries[8], expected_db_query)
+
+    def test_ensures_tags_table_exists_in_database(self):
+        db_queries = []
+
+        def execute_callback(query):
+            db_queries.append(query)
+
+        def fetchall_callback():
+            if db_queries[-1].startswith("PRAGMA"):
+                return [(0, "fake_column_name", "TEXT")]
+
+        self.connection_provider = ConnectionProvider(
+                                    execute_callback=execute_callback,
+                                    fetchall_callback=fetchall_callback)
+
+        self.sut = self.create()
+
+        self.sut.ensure_necessary_tables_exist()
+
+        expected_db_query = "CREATE TABLE IF NOT EXISTS {} (tag_id" \
+                            " TEXT PRIMARY KEY, name TEXT)".format(
+                                self.tags_table_name)
+
+        self.assertEqual(db_queries[12], expected_db_query)
 
 if __name__ is "__main__":
     unittest.main()

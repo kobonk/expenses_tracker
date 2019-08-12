@@ -3,29 +3,31 @@ import html
 import itertools
 import pendulum
 import time
+from validation_utils import validate_dict, validate_non_empty_string
 from expense.Expense import Expense
 from expense.Category import Category
 from storage.ExpensesRetrieverBase import ExpensesRetrieverBase
 
 class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
-    def __init__(self, expenses_table_name, categories_table_name,
-                 connection_provider):
-        self.__validate_expenses_table_name(expenses_table_name)
-        self.__validate_categories_table_name(categories_table_name)
+    def __init__(self, database_tables, connection_provider):
+        self.__validate_database_tables(database_tables)
         self.__validate_connection_provider(connection_provider)
 
-        self.__expenses_table_name = expenses_table_name
-        self.__categories_table_name = categories_table_name
+        self.__expenses_table_name = database_tables["expenses"]
+        self.__categories_table_name = database_tables["categories"]
+        self.__tags_table_name = database_tables["tags"]
         self.__connection_provider = connection_provider
 
     def ensure_necessary_tables_exist(self):
         """
-        Checks if necessary tables exist in the database
-        and adds them if they don't.
+        Checks if necessary tables exist in the database,
+        if they have necessary columns and adds them if they don't.
         """
 
         self.__ensure_expenses_table_exists()
+        self.__ensure_categories_table_exists()
+        self.__ensure_tags_table_exists()
 
     def filter_expenses(self, expense_name):
         """Returns a list of Expenses with matching expense_name"""
@@ -207,11 +209,24 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
             ("tag_ids", "TEXT"),
         ]
 
-        selection = """CREATE TABLE IF NOT EXISTS {} ({})""".format(
-                    self.__expenses_table_name, create_columns_schema(columns))
+        self.__ensure_table_exists(self.__expenses_table_name, columns)
 
-        self.__execute_query(selection)
-        self.__ensure_table_columns_exist(self.__expenses_table_name, columns)
+    def __ensure_categories_table_exists(self):
+        columns = [("category_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
+
+        self.__ensure_table_exists(self.__categories_table_name, columns)
+
+    def __ensure_tags_table_exists(self):
+        columns = [("tag_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
+
+        self.__ensure_table_exists(self.__tags_table_name, columns)
+
+    def __ensure_table_exists(self, table_name, columns):
+        query = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name,
+                create_columns_schema(columns))
+
+        self.__execute_query(query)
+        self.__ensure_table_columns_exist(table_name, columns)
 
     def __ensure_table_columns_exist(self, table_name, columns):
         selection = "PRAGMA table_info({})".format(table_name)
@@ -226,18 +241,6 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
                 self.__execute_query(selection)
 
-    def __validate_expenses_table_name(self, expenses_table_name):
-        if (not expenses_table_name or
-            not isinstance(expenses_table_name, str)):
-            raise ValueError("InvalidArgument: expenses_table_name must be a "
-                             "non-empty string")
-
-    def __validate_categories_table_name(self, categories_table_name):
-        if (not categories_table_name or
-            not isinstance(categories_table_name, str)):
-            raise ValueError("InvalidArgument: categories_table_name must be a "
-                             "non-empty string")
-
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:
             raise ValueError("InvalidArgument: connection_provider must be "
@@ -247,6 +250,15 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
             not callable(connection_provider.get_connection)):
             raise ValueError("InvalidArgument: connection_provider must have "
                              "get_connection method")
+
+    def __validate_database_tables(self, database_tables):
+        validator_map = {
+            "expenses": validate_non_empty_string,
+            "categories": validate_non_empty_string,
+            "tags": validate_non_empty_string
+        }
+
+        validate_dict(database_tables, "database_tables", validator_map)
 
 def create_columns_schema(columns):
     return ", ".join("{} {}".format(name, schema) for name, schema in columns)
