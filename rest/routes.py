@@ -124,6 +124,17 @@ def retrieve_months():
 
     return jsonify(months)
 
+@app.route("/tags", methods = ["GET"])
+def retrieve_tags():
+    """Returns a JSON array with all the tags from database"""
+    if request.method != "GET":
+        return None
+
+    retriever = get_expenses_retriever()
+    tags = retriever.retrieve_tags()
+
+    return jsonify(tags)
+
 class ExpenseNames(Resource):
     def get(self, name):
         if not name:
