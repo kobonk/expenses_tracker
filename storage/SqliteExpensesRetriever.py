@@ -6,6 +6,7 @@ import time
 from validation_utils import validate_dict, validate_non_empty_string
 from expense.Expense import Expense
 from expense.Category import Category
+from expense.Tag import Tag
 from storage.ExpensesRetrieverBase import ExpensesRetrieverBase
 
 class SqliteExpensesRetriever(ExpensesRetrieverBase):
@@ -146,13 +147,20 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         return self.__leave_unique_values(sorted_by_frequency)
 
     def retrieve_categories(self):
-        """Returns the list of Categories"""
+        """Returns the list of all Categories"""
         rows = self.__execute_query("""SELECT * FROM {table_name}
                         ORDER BY name ASC""".format(
                             table_name=self.__categories_table_name
                         ))
 
         return self.__get_models_array(rows, "category")
+
+    def retrieve_tags(self):
+        """Returns the list of all Tags"""
+        rows = self.__execute_query("SELECT * FROM {} ORDER BY name ASC".format(
+                                    self.__tags_table_name))
+
+        return self.__get_models_array(rows, "tag")
 
     def __leave_unique_values(self, list_of_values):
         if not list:
@@ -176,6 +184,10 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
     def __get_models_array(self, rows, model_type):
         models = []
+
+        if not rows:
+            return models
+
         convert_data_to_model = self.__get_data_converter(model_type)
 
         for row in rows:
@@ -190,6 +202,9 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         if model_type == "category":
             return self.__convert_table_row_to_category
 
+        if model_type == "tag":
+            return self.__convert_table_row_to_tag
+
     def __convert_table_row_to_expense(self, table_row):
         return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
                        table_row[3], self.__convert_table_row_to_category(
@@ -198,6 +213,9 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
     def __convert_table_row_to_category(self, table_row):
         return Category(table_row[0], html.unescape(table_row[1]))
+
+    def __convert_table_row_to_tag(self, table_row):
+        return Tag(table_row[0], html.unescape(table_row[1]))
 
     def __ensure_expenses_table_exists(self):
         columns = [

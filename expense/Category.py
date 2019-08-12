@@ -15,18 +15,16 @@ class Category:
         """Returns the name of the category"""
         return self.__name
 
-    def to_string(self):
-        """Returns a string representation of the Category"""
-        return "{name} ({id})".format(
-            name=self.get_name(), id=self.get_category_id()
-        )
-
     def to_json(self):
         """Returns JSON representation of the Category model"""
         return {
             "id": self.__category_id,
             "name": self.__name
         }
+
+    def __str__(self):
+        """Returns a string representation of the Category"""
+        return "{} ({})".format(self.get_name(), self.get_category_id())
 
     @classmethod
     def from_json(cls, json):
