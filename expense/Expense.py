@@ -38,13 +38,6 @@ class Expense:
         """Returns the purchase_date in form of user-friendly string"""
         return date.fromtimestamp(self.__purchase_date).strftime("%Y-%m-%d")
 
-    def to_string(self):
-        """Returns a string representation of Expense"""
-        return "{date}, {name} : {cost}".format(
-            date=self.get_purchase_date_string(),
-            name=self.get_name(),
-            cost=self.get_cost())
-
     def to_json(self):
         """Returns a directory which can be used for JSON output"""
         return {
@@ -54,6 +47,13 @@ class Expense:
             "id": self.__expense_id,
             "name": self.__name
         }
+
+    def __str__(self):
+        """Returns a string representation of Expense"""
+        return "{date}, {name} : {cost}".format(
+            date=self.get_purchase_date_string(),
+            name=self.get_name(),
+            cost=self.get_cost())
 
     @classmethod
     def from_json(cls, json):

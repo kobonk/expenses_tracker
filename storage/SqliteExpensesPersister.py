@@ -57,8 +57,7 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
-        print("Added: {expense_string}".format(
-            expense_string=expense.to_string()))
+        print("Added: {}".format(expense))
 
     def update_expense(self, expense_id, changes):
         """Updates existing Expense in the database"""
@@ -80,7 +79,7 @@ class SqliteExpensesPersister():
 
         expense = retriever.retrieve_expense(expense_id)
 
-        print("Updated: {}".format(expense.to_string()))
+        print("Updated: {}".format(expense))
 
         return expense
 
@@ -102,8 +101,7 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
-        print("Added: {category_string}".format(
-            category_string=category.to_string()))
+        print("Added: {}".format(category))
 
     def __create_expenses_table(self):
         """Creates the Expenses table in the database"""

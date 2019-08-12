@@ -1,5 +1,6 @@
 import re
 import unittest
+from expense.Tag import Tag
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 from tests.TestValidationUtils import (
     validate_dict,
@@ -203,6 +204,36 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
                                 self.tags_table_name)
 
         self.assertEqual(db_queries[12], expected_db_query)
+
+    def test_retrieves_tags(self):
+        db_queries = []
+        db_response = [
+            ("uuid4-1", "some tag"),
+            ("uuid4-2", "other tag")
+        ]
+
+        def execute_callback(query):
+            db_queries.append(query)
+
+        def fetchall_callback():
+            expected_query = "SELECT * FROM {} ORDER BY name ASC".format(
+                                self.tags_table_name)
+
+            if db_queries[-1] == expected_query:
+                return db_response
+
+        self.connection_provider = ConnectionProvider(
+                                    execute_callback=execute_callback,
+                                    fetchall_callback=fetchall_callback)
+
+        self.sut = self.create()
+
+        expected_tags = [
+            Tag(db_response[0][0], db_response[0][1]),
+            Tag(db_response[1][0], db_response[1][1])
+        ]
+
+        self.assertEqual(expected_tags, self.sut.retrieve_tags())
 
 if __name__ is "__main__":
     unittest.main()
