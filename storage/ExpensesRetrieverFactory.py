@@ -12,22 +12,14 @@ class ExpensesRetrieverFactory:
             "expenses", "categories", "tags"
         ])
 
-        expenses_table_name = database_tables["expenses"]
-        categories_table_name = database_tables["categories"]
-
         if type is DATABASE_TYPES["sqlite"]:
             return ExpensesRetrieverFactory.__create_sqlite_retriever(
-                                                    database_path,
-                                                    expenses_table_name,
-                                                    categories_table_name)
+                                            database_path, database_tables)
 
         return None
 
     @staticmethod
-    def __create_sqlite_retriever(database_path, expenses_table_name,
-                                  categories_table_name):
+    def __create_sqlite_retriever(database_path, database_tables):
         connection_provider = SqliteDatabaseConnectionProvider(database_path)
 
-        return SqliteExpensesRetriever(expenses_table_name,
-                                       categories_table_name,
-                                       connection_provider)
+        return SqliteExpensesRetriever(database_tables, connection_provider)

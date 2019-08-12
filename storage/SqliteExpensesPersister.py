@@ -1,9 +1,16 @@
-"""Uses SqlLite to save and update Expenses in the database"""
+"""Uses Sqlite to save and update Expenses in the database"""
 import html
 import os
 import sqlite3
 from sqlite3 import Error
-from const import DATABASE_PATH, EXPENSES_TABLE_NAME, CATEGORIES_TABLE_NAME
+
+from const import (
+    DATABASE_TABLES,
+    DATABASE_PATH,
+    EXPENSES_TABLE_NAME,
+    CATEGORIES_TABLE_NAME
+)
+
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 
 class SqliteExpensesPersister():
@@ -68,10 +75,8 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
-        retriever_factory = ExpensesRetrieverFactory()
-        retriever = retriever_factory.create("sqlite", DATABASE_PATH,
-                                        EXPENSES_TABLE_NAME,
-                                        CATEGORIES_TABLE_NAME)
+        retriever = ExpensesRetrieverFactory.create("sqlite", DATABASE_PATH,
+                                        DATABASE_TABLES)
 
         expense = retriever.retrieve_expense(expense_id)
 

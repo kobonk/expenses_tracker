@@ -15,4 +15,20 @@ def validate_dict_keys(parameter, parameter_name, keys):
     for key in keys:
         if not key in parameter:
             raise ValueError("InvalidArgument: {} dictionary must have {} key"
-                                .format(parameter_name, key))
+                             .format(parameter_name, key))
+
+def validate_dict(parameter, parameter_name, dict_schema):
+    if not parameter:
+        raise ValueError("InvalidArgument: {} must be provided"
+                         .format(parameter_name))
+
+    if not isinstance(parameter, dict):
+        raise ValueError("InvalidArgument: {} must be a dictionary"
+                         .format(parameter_name))
+
+    for key, validate in dict_schema.items():
+        if not key in parameter:
+            raise ValueError("InvalidArgument: {} dictionary must have {} key"
+                             .format(parameter_name, key))
+
+        validate(parameter[key], "{}.{}".format(parameter_name, key))
