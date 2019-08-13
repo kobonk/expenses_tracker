@@ -97,6 +97,26 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
 
         print("Added: {}".format(category))
 
+    def persist_tags(self, tags=[]):
+        """Adds Tags to the database"""
+
+        if not tags:
+            return None
+
+        connection = self.__connection_provider.get_connection()
+        cursor = connection.cursor()
+        tag_entries = ["', '".join([tag.get_tag_id(), tag.get_name()]) for tag in tags]
+
+        cursor.execute("INSERT INTO {table_name} (tag_id, name) VALUES " \
+                       "('{tags}')".format(
+                    table_name=self.__tags_table_name,
+                    tags="'), ('".join(tag_entries)))
+
+        connection.commit()
+        connection.close()
+
+        return tags
+
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:
             raise ValueError("InvalidArgument: connection_provider must be "

@@ -8,5 +8,5 @@ class ExpensesPersisterBase():
     def add_category(self, category):
         raise NotImplementedError("Method not implemented!")
 
-    def add_tags(self, tags):
+    def persist_tags(self, tags):
         raise NotImplementedError("Method not implemented!")
