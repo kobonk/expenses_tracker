@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_restful import Resource, Api
 
 from const import (
-    DATABASE_PATH,
+    SQLITE_DATABASE_PATH,
     DATABASE_TABLES,
     EXPENSES_TABLE_NAME,
     CATEGORIES_TABLE_NAME
@@ -28,12 +28,12 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 def get_expenses_retriever():
-    return ExpensesRetrieverFactory.create("sqlite", DATABASE_PATH,
+    return ExpensesRetrieverFactory.create("sqlite", SQLITE_DATABASE_PATH,
                                     DATABASE_TABLES)
 
 def get_expenses_persister():
     persister_factory = ExpensesPersisterFactory()
-    return persister_factory.create("sqlite", DATABASE_PATH,
+    return persister_factory.create("sqlite", SQLITE_DATABASE_PATH,
                                     EXPENSES_TABLE_NAME,
                                     CATEGORIES_TABLE_NAME)
 
@@ -134,6 +134,11 @@ def retrieve_tags():
     tags = retriever.retrieve_tags()
 
     return jsonify(tags)
+
+@app.route("/tags", methods = ["POST"])
+def add_tags():
+    print("Created?")
+    return "Created!"
 
 class ExpenseNames(Resource):
     def get(self, name):

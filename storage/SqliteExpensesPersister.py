@@ -6,7 +6,7 @@ from sqlite3 import Error
 
 from const import (
     DATABASE_TABLES,
-    DATABASE_PATH,
+    SQLITE_DATABASE_PATH,
     EXPENSES_TABLE_NAME,
     CATEGORIES_TABLE_NAME
 )
@@ -74,7 +74,7 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
-        retriever = ExpensesRetrieverFactory.create("sqlite", DATABASE_PATH,
+        retriever = ExpensesRetrieverFactory.create("sqlite", SQLITE_DATABASE_PATH,
                                         DATABASE_TABLES)
 
         expense = retriever.retrieve_expense(expense_id)
