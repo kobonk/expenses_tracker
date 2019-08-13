@@ -4,26 +4,21 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-from const import (
-    DATABASE_TABLES,
-    SQLITE_DATABASE_PATH,
-    EXPENSES_TABLE_NAME,
-    CATEGORIES_TABLE_NAME
-)
-
+from validation_utils import validate_dict, validate_non_empty_string
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
+from storage.ExpensesPersisterBase import ExpensesPersisterBase
 
-class SqliteExpensesPersister():
+class SqliteExpensesPersister(ExpensesPersisterBase):
     """Persists Expenses data in a database"""
 
-    def __init__(self, expenses_table_name, categories_table_name,
-                 connection_provider):
-        self.__expenses_table_name = expenses_table_name
-        self.__categories_table_name = categories_table_name
-        self.__connection_provider = connection_provider
+    def __init__(self, database_tables, connection_provider):
+        self.__validate_database_tables(database_tables)
+        self.__validate_connection_provider(connection_provider)
 
-        self.__create_categories_table()
-        self.__create_expenses_table()
+        self.__expenses_table_name = database_tables["expenses"]
+        self.__categories_table_name = database_tables["categories"]
+        self.__tags_table_name = database_tables["tags"]
+        self.__connection_provider = connection_provider
 
     def add_expense(self, expense):
         """Adds a new Expense to database"""
@@ -74,8 +69,7 @@ class SqliteExpensesPersister():
         connection.commit()
         connection.close()
 
-        retriever = ExpensesRetrieverFactory.create("sqlite", SQLITE_DATABASE_PATH,
-                                        DATABASE_TABLES)
+        retriever = ExpensesRetrieverFactory.create("sqlite")
 
         expense = retriever.retrieve_expense(expense_id)
 
@@ -103,35 +97,21 @@ class SqliteExpensesPersister():
 
         print("Added: {}".format(category))
 
-    def __create_expenses_table(self):
-        """Creates the Expenses table in the database"""
+    def __validate_connection_provider(self, connection_provider):
+        if not connection_provider:
+            raise ValueError("InvalidArgument: connection_provider must be "
+                                "provided")
 
-        connection = self.__connection_provider.get_connection()
-        cursor = connection.cursor()
+        if (not hasattr(connection_provider, "get_connection") or
+            not callable(connection_provider.get_connection)):
+            raise ValueError("InvalidArgument: connection_provider must have "
+                                "get_connection method")
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS {table_name} (
-                        expense_id  TEXT PRIMARY KEY,
-                        name TEXT,
-                        cost REAL,
-                        purchase_date REAL,
-                        category_id TEXT)"""
-                        .format(table_name=self.__expenses_table_name)
-        )
+    def __validate_database_tables(self, database_tables):
+        validator_map = {
+            "expenses": validate_non_empty_string,
+            "categories": validate_non_empty_string,
+            "tags": validate_non_empty_string
+        }
 
-        connection.commit()
-        connection.close()
-
-    def __create_categories_table(self):
-        """Creates the Categories table in the database"""
-
-        connection = self.__connection_provider.get_connection()
-        cursor = connection.cursor()
-
-        cursor.execute("""CREATE TABLE IF NOT EXISTS {table_name} (
-                        category_id  TEXT PRIMARY KEY,
-                        name TEXT)"""
-                        .format(table_name=self.__categories_table_name)
-        )
-
-        connection.commit()
-        connection.close()
+        validate_dict(database_tables, "database_tables", validator_map)

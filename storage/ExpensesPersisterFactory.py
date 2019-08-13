@@ -1,18 +1,18 @@
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesPersister import SqliteExpensesPersister
+from validation_utils import validate_non_empty_string
+from const import DATABASE_TABLES, DATABASE_TYPES, SQLITE_DATABASE_PATH
 
 class ExpensesPersisterFactory:
-    def create(self, type, database_path, expenses_table_name,
-               categories_table_name):
-        if type is "sqlite":
-            return self.__create_sqlite_persister(database_path,
-                                                  expenses_table_name,
-                                                  categories_table_name)
+    @staticmethod
+    def create(type):
+        validate_non_empty_string(type, "type")
 
-    def __create_sqlite_persister(self, database_path, expenses_table_name,
-                                  categories_table_name):
-        connection_provider = SqliteDatabaseConnectionProvider(database_path)
-        
-        return SqliteExpensesPersister(expenses_table_name,
-                                       categories_table_name,
-                                       connection_provider)
+        if type is DATABASE_TYPES["sqlite"]:
+            return ExpensesPersisterFactory.__create_sqlite_persister()
+
+    @staticmethod
+    def __create_sqlite_persister():
+        conn_provider = SqliteDatabaseConnectionProvider(SQLITE_DATABASE_PATH)
+
+        return SqliteExpensesPersister(DATABASE_TABLES, conn_provider)
