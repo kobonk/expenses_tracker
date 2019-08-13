@@ -2,13 +2,6 @@ from flask import Flask, jsonify, render_template, request, make_response
 from flask_cors import CORS
 from flask_restful import Resource, Api
 
-from const import (
-    SQLITE_DATABASE_PATH,
-    DATABASE_TABLES,
-    EXPENSES_TABLE_NAME,
-    CATEGORIES_TABLE_NAME
-)
-
 from expense.Category import Category
 from expense.Expense import Expense, convert_date_string_to_timestamp
 from storage.ExpensesPersisterFactory import ExpensesPersisterFactory
@@ -28,14 +21,10 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 def get_expenses_retriever():
-    return ExpensesRetrieverFactory.create("sqlite", SQLITE_DATABASE_PATH,
-                                    DATABASE_TABLES)
+    return ExpensesRetrieverFactory.create("sqlite")
 
 def get_expenses_persister():
-    persister_factory = ExpensesPersisterFactory()
-    return persister_factory.create("sqlite", SQLITE_DATABASE_PATH,
-                                    EXPENSES_TABLE_NAME,
-                                    CATEGORIES_TABLE_NAME)
+    return ExpensesPersisterFactory.create("sqlite")
 
 def convert_models_to_json(models):
     return list(map(lambda model: model.to_json(), models))
