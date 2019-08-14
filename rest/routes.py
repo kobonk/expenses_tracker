@@ -123,7 +123,7 @@ def retrieve_tags():
     retriever = get_expenses_retriever()
     tags = retriever.retrieve_tags()
 
-    return jsonify(convert_models_to_json(  ))
+    return jsonify(convert_models_to_json(tags))
 
 @app.route("/tags", methods = ["POST"])
 def add_tags():
@@ -140,8 +140,7 @@ def add_tags():
 
         return jsonify(convert_models_to_json(added_tags))
 
-    print("Created?")
-    return "Created!"
+    return None
 
 class ExpenseNames(Resource):
     def get(self, name):
