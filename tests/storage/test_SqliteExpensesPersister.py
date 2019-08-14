@@ -46,7 +46,7 @@ class CursorMock:
         if self.fetchall_callback:
             return self.fetchall_callback()
 
-        return 123
+        return []
 
 class TestSqliteExpensesPersister(unittest.TestCase):
     def create(self):
@@ -140,7 +140,7 @@ class TestSqliteExpensesPersister(unittest.TestCase):
         self.assertIn(expected_query, db_queries)
         self.assertEqual(tags, result)
 
-    def test_not_persists_tags_if_none_provided_and_returns_none(self):
+    def test_does_not_persist_tags_if_none_provided_and_returns_none(self):
         db_queries = []
 
         def execute_callback(query):
@@ -155,6 +155,44 @@ class TestSqliteExpensesPersister(unittest.TestCase):
 
         self.assertEqual(db_queries, [])
         self.assertEqual(result, None)
+
+    def test_does_not_persist_tags_that_already_exist(self):
+        db_queries = []
+
+        def execute_callback(query):
+            db_queries.append(query)
+
+        def fetchall_callback():
+            query_for_existing_tag = "SELECT * FROM {} WHERE name " \
+                                "LIKE 'first tag'".format(self.tags_table_name)
+
+            if db_queries[-1] == query_for_existing_tag:
+                return [("id-X", "first tag")]
+
+            return []
+
+        self.connection_provider = ConnectionProviderMock(
+                                    execute_callback=execute_callback,
+                                    fetchall_callback=fetchall_callback)
+
+        self.sut = self.create()
+
+        tags = [
+            Tag("id-1", "first tag"),
+            Tag("id-2", "other tag")
+        ]
+
+        result = self.sut.persist_tags(tags)
+
+        expected_query = "INSERT INTO {} (tag_id, name) " \
+                            "VALUES ('id-2', 'other tag')".format(
+                                    self.tags_table_name
+                                )
+
+        expected_tags = [Tag("id-X", "first tag"), tags[-1]]
+
+        self.assertIn(expected_query, db_queries)
+        self.assertListEqual(expected_tags, result)
 
 if __name__ is "__main__":
     unittest.main()

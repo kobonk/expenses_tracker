@@ -4,7 +4,7 @@ import uuid
 class Tag:
     """The class is a model for Categories"""
     def __init__(self, tag_id, name):
-        self.__tag_id = tag_id
+        self.__tag_id = tag_id if tag_id else str(uuid.uuid4())
         self.__name = name
 
     def get_tag_id(self):
@@ -27,9 +27,8 @@ class Tag:
         return "{} ({})".format(self.get_name(), self.get_tag_id())
 
     def __eq__(self, other):
-        return (self.__tag_id == other.get_tag_id()
-                and self.__name == other.get_name())
+        return self.__name == other.get_name()
 
     @classmethod
     def from_json(cls, json):
-        return Tag(str(uuid.uuid4()), json["name"])
+        return Tag(json["name"], str(uuid.uuid4()))

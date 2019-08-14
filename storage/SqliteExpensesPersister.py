@@ -105,17 +105,42 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
 
         connection = self.__connection_provider.get_connection()
         cursor = connection.cursor()
-        tag_entries = ["', '".join([tag.get_tag_id(), tag.get_name()]) for tag in tags]
+
+        tag_query_parts = list(
+            filter(
+                None,
+                map(self.__create_tag_persisting_query_part, tags)
+            )
+        )
 
         cursor.execute("INSERT INTO {table_name} (tag_id, name) VALUES " \
-                       "('{tags}')".format(
-                    table_name=self.__tags_table_name,
-                    tags="'), ('".join(tag_entries)))
+                       "{tags}".format(table_name=self.__tags_table_name,
+                                       tags=", ".join(tag_query_parts)))
 
         connection.commit()
         connection.close()
 
         return tags
+
+    def __create_tag_persisting_query_part(self, tag):
+        if not self.__check_if_tag_exists(tag):
+            return "('{}', '{}')".format(tag.get_tag_id(), tag.get_name())
+
+        return None
+
+    def __check_if_tag_exists(self, tag):
+        if not tag:
+            return False
+
+        connection = self.__connection_provider.get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT * FROM {} WHERE name LIKE '{}'".format(
+                    self.__tags_table_name, tag.get_name()))
+
+        rows = cursor.fetchall()
+
+        return True if rows else False
 
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:

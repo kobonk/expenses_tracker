@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_restful import Resource, Api
 
 from expense.Category import Category
+from expense.Tag import Tag
 from expense.Expense import Expense, convert_date_string_to_timestamp
 from storage.ExpensesPersisterFactory import ExpensesPersisterFactory
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
@@ -122,10 +123,23 @@ def retrieve_tags():
     retriever = get_expenses_retriever()
     tags = retriever.retrieve_tags()
 
-    return jsonify(tags)
+    return jsonify(convert_models_to_json(  ))
 
 @app.route("/tags", methods = ["POST"])
 def add_tags():
+    if request.method == "POST":
+        tags_payload = request.get_json(force=True)
+
+        if not tags_payload:
+            return jsonify([])
+
+        tags = [Tag(None, tag) for tag in tags_payload]
+        expenses_persister = get_expenses_persister()
+
+        added_tags = expenses_persister.persist_tags(tags)
+
+        return jsonify(convert_models_to_json(added_tags))
+
     print("Created?")
     return "Created!"
 
