@@ -18,6 +18,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         self.__expenses_table_name = database_tables["expenses"]
         self.__categories_table_name = database_tables["categories"]
         self.__tags_table_name = database_tables["tags"]
+        self.__expense_tags_table_name = database_tables["expense_tags"]
         self.__connection_provider = connection_provider
 
     def ensure_necessary_tables_exist(self):
@@ -29,6 +30,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         self.__ensure_expenses_table_exists()
         self.__ensure_categories_table_exists()
         self.__ensure_tags_table_exists()
+        self.__ensure_expense_tags_table_exists()
 
     def filter_expenses(self, expense_name):
         """Returns a list of Expenses with matching expense_name"""
@@ -223,8 +225,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
             ("name", "TEXT"),
             ("cost", "REAL"),
             ("purchase_date", "REAL"),
-            ("category_id", "TEXT"),
-            ("tag_ids", "TEXT"),
+            ("category_id", "TEXT")
         ]
 
         self.__ensure_table_exists(self.__expenses_table_name, columns)
@@ -238,6 +239,15 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         columns = [("tag_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
 
         self.__ensure_table_exists(self.__tags_table_name, columns)
+
+    def __ensure_expense_tags_table_exists(self):
+        columns = [
+            ("id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
+            ("expense_id", "TEXT"),
+            ("tag_id", "TEXT")
+        ]
+
+        self.__ensure_table_exists(self.__expense_tags_table_name, columns)
 
     def __ensure_table_exists(self, table_name, columns):
         query = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name,
@@ -273,7 +283,8 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         validator_map = {
             "expenses": validate_non_empty_string,
             "categories": validate_non_empty_string,
-            "tags": validate_non_empty_string
+            "tags": validate_non_empty_string,
+            "expense_tags": validate_non_empty_string
         }
 
         validate_dict(database_tables, "database_tables", validator_map)

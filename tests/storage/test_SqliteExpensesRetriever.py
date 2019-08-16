@@ -13,24 +13,41 @@ class ConnectionProvider:
     def __init__(self, execute_callback=None, fetchall_callback=None):
         self.execute_callback = execute_callback
         self.fetchall_callback = fetchall_callback
+        self.connection = Connection(self.execute_callback, self.fetchall_callback)
 
     def get_connection(self):
-        return Connection(self.execute_callback, self.fetchall_callback)
+        return self.connection
+
+    def get_queries(self):
+        if not self.connection:
+            return []
+
+        return self.connection.get_queries()
 
 class Connection:
     def __init__(self, execute_callback=None, fetchall_callback=None):
         self.execute_callback = execute_callback
         self.fetchall_callback = fetchall_callback
+        self.cursor_object = Cursor(self.execute_callback, self.fetchall_callback)
 
     def cursor(self):
-        return Cursor(self.execute_callback, self.fetchall_callback)
+        return self.cursor_object
+
+    def get_queries(self):
+        if not self.cursor_object:
+            return []
+
+        return self.cursor_object.db_queries
 
 class Cursor:
     def __init__(self, execute_callback=None, fetchall_callback=None):
         self.execute_callback = execute_callback
         self.fetchall_callback = fetchall_callback
+        self.db_queries = []
 
     def execute(self, query):
+        self.db_queries.append(query)
+
         if self.execute_callback:
             return self.execute_callback(query)
 
@@ -40,7 +57,10 @@ class Cursor:
         if self.fetchall_callback:
             return self.fetchall_callback()
 
-        return 123
+        if self.db_queries[-1].startswith("PRAGMA"):
+                return [(0, "fake_column_name", "TEXT")]
+
+        return []
 
 class TestSqliteExpensesRetriever(unittest.TestCase):
     def create(self):
@@ -51,11 +71,13 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         self.expenses_table_name = "expenses"
         self.categories_table_name = "categories"
         self.tags_table_name = "tags"
+        self.expense_tags_table_name = "expense_tags"
 
         self.database_tables = {
             "expenses": self.expenses_table_name,
             "categories": self.categories_table_name,
-            "tags": self.tags_table_name
+            "tags": self.tags_table_name,
+            "expense_tags": self.expense_tags_table_name
         }
 
         self.connection_provider = ConnectionProvider()
@@ -75,7 +97,10 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
                 "InvalidArgument:.*database_tables.categories"),
             "tags": (
                 validate_non_empty_string,
-                "InvalidArgument:.*database_tables.tags")
+                "InvalidArgument:.*database_tables.tags"),
+            "expense_tags": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.expense_tags")
         }
 
         validate_dict(self, validate_database_tables, self.database_tables,
@@ -134,43 +159,23 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         )
 
     def test_ensures_expenses_table_exist_in_database(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        def fetchall_callback():
-            if db_queries[-1].startswith("PRAGMA"):
-                return [(0, "fake_column_name", "TEXT")]
-
-        self.connection_provider = ConnectionProvider(
-                                    execute_callback=execute_callback,
-                                    fetchall_callback=fetchall_callback)
+        self.connection_provider = ConnectionProvider()
         self.sut = self.create()
 
         self.sut.ensure_necessary_tables_exist()
 
         expected_db_query = "CREATE TABLE IF NOT EXISTS {} (expense_id" \
                             " TEXT PRIMARY KEY, name TEXT, cost REAL," \
-                            " purchase_date REAL, category_id TEXT," \
-                            " tag_ids TEXT)".format(self.expenses_table_name)
+                            " purchase_date REAL, category_id TEXT)" \
+                            "".format(self.expenses_table_name)
 
-        self.assertEqual(db_queries[0], expected_db_query)
+        self.assertEqual(
+            self.connection_provider.get_queries()[0],
+            expected_db_query
+        )
 
     def test_ensures_categories_table_exists_in_database(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        def fetchall_callback():
-            if db_queries[-1].startswith("PRAGMA"):
-                return [(0, "fake_column_name", "TEXT")]
-
-        self.connection_provider = ConnectionProvider(
-                                    execute_callback=execute_callback,
-                                    fetchall_callback=fetchall_callback)
-
+        self.connection_provider = ConnectionProvider()
         self.sut = self.create()
 
         self.sut.ensure_necessary_tables_exist()
@@ -179,22 +184,13 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
                             " TEXT PRIMARY KEY, name TEXT)".format(
                                 self.categories_table_name)
 
-        self.assertEqual(db_queries[8], expected_db_query)
+        self.assertEqual(
+            self.connection_provider.get_queries()[7],
+            expected_db_query
+        )
 
     def test_ensures_tags_table_exists_in_database(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        def fetchall_callback():
-            if db_queries[-1].startswith("PRAGMA"):
-                return [(0, "fake_column_name", "TEXT")]
-
-        self.connection_provider = ConnectionProvider(
-                                    execute_callback=execute_callback,
-                                    fetchall_callback=fetchall_callback)
-
+        self.connection_provider = ConnectionProvider()
         self.sut = self.create()
 
         self.sut.ensure_necessary_tables_exist()
@@ -203,7 +199,26 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
                             " TEXT PRIMARY KEY, name TEXT)".format(
                                 self.tags_table_name)
 
-        self.assertEqual(db_queries[12], expected_db_query)
+        self.assertEqual(
+            self.connection_provider.get_queries()[11],
+            expected_db_query
+        )
+
+    def test_ensures_expense_tags_table_exists_in_database(self):
+        self.connection_provider = ConnectionProvider()
+        self.sut = self.create()
+
+        self.sut.ensure_necessary_tables_exist()
+
+        expected_db_query = "CREATE TABLE IF NOT EXISTS {} (" \
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT" \
+                            ", expense_id TEXT, tag_id TEXT)".format(
+                                self.expense_tags_table_name)
+
+        self.assertEqual(
+            self.connection_provider.get_queries()[15],
+            expected_db_query
+        )
 
     def test_retrieves_tags(self):
         db_queries = []
