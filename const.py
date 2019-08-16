@@ -12,6 +12,7 @@ SQLITE_DATABASE_PATH = str(Path("{DIR_PATH}/dbs/expenses-tracker.db".format(**lo
 DATABASE_TABLES = {
     "categories": "categories",
     "expenses": "expenses",
+    "expense_tags": "expense_tags",
     "tags": "tags"
 }
 
