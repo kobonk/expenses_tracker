@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+DEBUG_MODE = True
+
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 DATABASE_TYPES = {

@@ -21,17 +21,6 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         self.__expense_tags_table_name = database_tables["expense_tags"]
         self.__connection_provider = connection_provider
 
-    def ensure_necessary_tables_exist(self):
-        """
-        Checks if necessary tables exist in the database,
-        if they have necessary columns and adds them if they don't.
-        """
-
-        self.__ensure_expenses_table_exists()
-        self.__ensure_categories_table_exists()
-        self.__ensure_tags_table_exists()
-        self.__ensure_expense_tags_table_exists()
-
     def filter_expenses(self, expense_name):
         """Returns a list of Expenses with matching expense_name"""
 
@@ -177,12 +166,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         return unique_list
 
     def __execute_query(self, query):
-        connection = self.__connection_provider.get_connection()
-        cursor = connection.cursor()
-
-        cursor.execute(query)
-
-        return cursor.fetchall()
+        return self.__connection_provider.execute_query(query)
 
     def __get_models_array(self, rows, model_type):
         models = []
@@ -219,65 +203,15 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
     def __convert_table_row_to_tag(self, table_row):
         return Tag(table_row[0], html.unescape(table_row[1]))
 
-    def __ensure_expenses_table_exists(self):
-        columns = [
-            ("expense_id", "TEXT PRIMARY KEY"),
-            ("name", "TEXT"),
-            ("cost", "REAL"),
-            ("purchase_date", "REAL"),
-            ("category_id", "TEXT")
-        ]
-
-        self.__ensure_table_exists(self.__expenses_table_name, columns)
-
-    def __ensure_categories_table_exists(self):
-        columns = [("category_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
-
-        self.__ensure_table_exists(self.__categories_table_name, columns)
-
-    def __ensure_tags_table_exists(self):
-        columns = [("tag_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
-
-        self.__ensure_table_exists(self.__tags_table_name, columns)
-
-    def __ensure_expense_tags_table_exists(self):
-        columns = [
-            ("id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
-            ("expense_id", "TEXT"),
-            ("tag_id", "TEXT")
-        ]
-
-        self.__ensure_table_exists(self.__expense_tags_table_name, columns)
-
-    def __ensure_table_exists(self, table_name, columns):
-        query = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name,
-                create_columns_schema(columns))
-
-        self.__execute_query(query)
-        self.__ensure_table_columns_exist(table_name, columns)
-
-    def __ensure_table_columns_exist(self, table_name, columns):
-        selection = "PRAGMA table_info({})".format(table_name)
-
-        rows = self.__execute_query(selection)
-        column_names = [row[1] for row in rows]
-
-        for column, schema in columns:
-            if not column in column_names:
-                selection = "ALTER TABLE {} ADD COLUMN {} {}".format(
-                             table_name, column, schema)
-
-                self.__execute_query(selection)
-
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:
             raise ValueError("InvalidArgument: connection_provider must be "
                              "provided")
 
-        if (not hasattr(connection_provider, "get_connection") or
-            not callable(connection_provider.get_connection)):
+        if (not hasattr(connection_provider, "execute_query") or
+            not callable(connection_provider.execute_query)):
             raise ValueError("InvalidArgument: connection_provider must have "
-                             "get_connection method")
+                             "execute_query method")
 
     def __validate_database_tables(self, database_tables):
         validator_map = {
@@ -288,6 +222,3 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         }
 
         validate_dict(database_tables, "database_tables", validator_map)
-
-def create_columns_schema(columns):
-    return ", ".join("{} {}".format(name, schema) for name, schema in columns)

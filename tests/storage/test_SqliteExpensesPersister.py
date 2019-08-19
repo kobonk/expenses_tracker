@@ -1,7 +1,10 @@
 import re
 import unittest
+
 from expense.Tag import Tag
+from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesPersister import SqliteExpensesPersister
+
 from tests.TestValidationUtils import (
     validate_dict,
     validate_non_empty_string,
@@ -9,44 +12,6 @@ from tests.TestValidationUtils import (
     validate_provided
 )
 
-class ConnectionProviderMock:
-    def __init__(self, execute_callback=None, fetchall_callback=None):
-        self.execute_callback = execute_callback
-        self.fetchall_callback = fetchall_callback
-
-    def get_connection(self):
-        return ConnectionMock(self.execute_callback, self.fetchall_callback)
-
-class ConnectionMock:
-    def __init__(self, execute_callback=None, fetchall_callback=None):
-        self.execute_callback = execute_callback
-        self.fetchall_callback = fetchall_callback
-
-    def cursor(self):
-        return CursorMock(self.execute_callback, self.fetchall_callback)
-
-    def commit(self):
-        return None
-
-    def close(self):
-        return None
-
-class CursorMock:
-    def __init__(self, execute_callback=None, fetchall_callback=None):
-        self.execute_callback = execute_callback
-        self.fetchall_callback = fetchall_callback
-
-    def execute(self, query):
-        if self.execute_callback:
-            return self.execute_callback(query)
-
-        return 112
-
-    def fetchall(self):
-        if self.fetchall_callback:
-            return self.fetchall_callback()
-
-        return []
 
 class TestSqliteExpensesPersister(unittest.TestCase):
     def create(self):
@@ -57,14 +22,20 @@ class TestSqliteExpensesPersister(unittest.TestCase):
         self.expenses_table_name = "expenses"
         self.categories_table_name = "categories"
         self.tags_table_name = "tags"
+        self.expense_tags_table_name = "expense_tags"
 
         self.database_tables = {
             "expenses": self.expenses_table_name,
             "categories": self.categories_table_name,
-            "tags": self.tags_table_name
+            "tags": self.tags_table_name,
+            "expense_tags": self.expense_tags_table_name
         }
 
-        self.connection_provider = ConnectionProviderMock()
+        self.connection_provider = SqliteDatabaseConnectionProvider(":memory:",
+                                                self.database_tables)
+
+        self.connection_provider.ensure_necessary_tables_exist()
+
         self.sut = self.create()
 
     def test_validates_database_tables(self):
@@ -81,7 +52,10 @@ class TestSqliteExpensesPersister(unittest.TestCase):
                 "InvalidArgument:.*database_tables.categories"),
             "tags": (
                 validate_non_empty_string,
-                "InvalidArgument:.*database_tables.tags")
+                "InvalidArgument:.*database_tables.tags"),
+            "expense_tags": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.expense_tags")
         }
 
         validate_dict(self, validate_database_tables, self.database_tables,
@@ -111,17 +85,9 @@ class TestSqliteExpensesPersister(unittest.TestCase):
             )
 
         validate_provided(validate_existence)
-        validate_object_with_methods(self, ["get_connection"], validate_methods)
+        validate_object_with_methods(self, ["execute_query"], validate_methods)
 
     def test_persists_tags_and_returns_them(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        self.connection_provider = ConnectionProviderMock(
-                                    execute_callback=execute_callback)
-
         self.sut = self.create()
 
         tags = [
@@ -129,52 +95,26 @@ class TestSqliteExpensesPersister(unittest.TestCase):
             Tag("id-2", "other tag")
         ]
 
-        result = self.sut.persist_tags(tags)
+        self.assertEqual(tags, self.sut.persist_tags(tags))
 
-        expected_query = "INSERT INTO {} (tag_id, name) " \
-                            "VALUES ('id-1', 'first tag'), " \
-                                "('id-2', 'other tag')".format(
-                                    self.tags_table_name
-                                )
+        rows = self.connection_provider.execute_query("SELECT name, tag_id " \
+            "FROM {}".format(self.tags_table_name))
 
-        self.assertIn(expected_query, db_queries)
-        self.assertEqual(tags, result)
+        expected_rows = [("first tag", "id-1"), ("other tag", "id-2")]
+
+        self.assertEqual(rows, expected_rows)
 
     def test_does_not_persist_tags_if_none_provided_and_returns_none(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        self.connection_provider = ConnectionProviderMock(
-                                    execute_callback=execute_callback)
-
         self.sut = self.create()
 
-        result = self.sut.persist_tags(None)
+        self.assertEqual(None, self.sut.persist_tags(None))
 
-        self.assertEqual(db_queries, [])
-        self.assertEqual(result, None)
+        rows = self.connection_provider.execute_query("SELECT name, tag_id " \
+            "FROM {}".format(self.tags_table_name))
+
+        self.assertEqual(rows, [])
 
     def test_does_not_persist_tags_that_already_exist(self):
-        db_queries = []
-
-        def execute_callback(query):
-            db_queries.append(query)
-
-        def fetchall_callback():
-            query_for_existing_tag = "SELECT * FROM {} WHERE name " \
-                                "LIKE 'first tag'".format(self.tags_table_name)
-
-            if db_queries[-1] == query_for_existing_tag:
-                return [("id-X", "first tag")]
-
-            return []
-
-        self.connection_provider = ConnectionProviderMock(
-                                    execute_callback=execute_callback,
-                                    fetchall_callback=fetchall_callback)
-
         self.sut = self.create()
 
         tags = [
@@ -182,16 +122,13 @@ class TestSqliteExpensesPersister(unittest.TestCase):
             Tag("id-2", "other tag")
         ]
 
-        result = self.sut.persist_tags(tags)
+        self.connection_provider.execute_query("INSERT INTO {} (tag_id, name)" \
+            " VALUES ('id-X', 'first tag')".format(self.tags_table_name))
 
-        expected_query = "INSERT INTO {} (tag_id, name) " \
-                            "VALUES ('id-2', 'other tag')".format(
-                                    self.tags_table_name
-                                )
+        result = self.sut.persist_tags(tags)
 
         expected_tags = [Tag("id-X", "first tag"), tags[-1]]
 
-        self.assertIn(expected_query, db_queries)
         self.assertListEqual(expected_tags, result)
 
 if __name__ is "__main__":
