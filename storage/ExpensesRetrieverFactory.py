@@ -13,8 +13,12 @@ class ExpensesRetrieverFactory:
 
         return None
 
-    @staticmethod
-    def __create_sqlite_retriever():
-        conn_provider = SqliteDatabaseConnectionProvider(SQLITE_DATABASE_PATH)
-
-        return SqliteExpensesRetriever(DATABASE_TABLES, conn_provider)
+    @classmethod
+    def __create_sqlite_retriever(cls):
+        return SqliteExpensesRetriever(
+            DATABASE_TABLES,
+            SqliteDatabaseConnectionProvider(
+                SQLITE_DATABASE_PATH,
+                DATABASE_TABLES
+            )
+        )

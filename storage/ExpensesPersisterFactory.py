@@ -11,8 +11,12 @@ class ExpensesPersisterFactory:
         if type is DATABASE_TYPES["sqlite"]:
             return ExpensesPersisterFactory.__create_sqlite_persister()
 
-    @staticmethod
-    def __create_sqlite_persister():
-        conn_provider = SqliteDatabaseConnectionProvider(SQLITE_DATABASE_PATH)
-
-        return SqliteExpensesPersister(DATABASE_TABLES, conn_provider)
+    @classmethod
+    def __create_sqlite_persister(cls):
+        return SqliteExpensesPersister(
+            DATABASE_TABLES,
+            SqliteDatabaseConnectionProvider(
+                SQLITE_DATABASE_PATH,
+                DATABASE_TABLES
+            )
+        )
