@@ -4,7 +4,9 @@ import os
 import sqlite3
 from sqlite3 import Error
 
+from const import DATABASE_TYPE
 from validation_utils import validate_dict, validate_non_empty_string
+from expense.Expense import Expense
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 from storage.ExpensesPersisterBase import ExpensesPersisterBase
 
@@ -18,10 +20,13 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
         self.__expenses_table_name = database_tables["expenses"]
         self.__categories_table_name = database_tables["categories"]
         self.__tags_table_name = database_tables["tags"]
+        self.__expense_tags_table_name = database_tables["expense_tags"]
         self.__connection_provider = connection_provider
 
-    def add_expense(self, expense):
+    def add_expense(self, expense : Expense):
         """Adds a new Expense to database"""
+        if not expense:
+            return None
 
         query = "INSERT INTO {table_name} (expense_id, name, cost, " \
             "purchase_date, category_id ) VALUES ('{e_id}', '{e_name}', " \
@@ -36,6 +41,7 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
             )
 
         self.__connection_provider.execute_query(query)
+        self.persist_expense_tags(expense)
 
         print("Added: {}".format(expense))
 
@@ -48,11 +54,9 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
                 ", ".join(updates),
                 expense_id)
 
-        print(query)
-
         self.__connection_provider.execute_query(query)
 
-        retriever = ExpensesRetrieverFactory.create("sqlite")
+        retriever = ExpensesRetrieverFactory.create(DATABASE_TYPE)
         expense = retriever.retrieve_expense(expense_id)
 
         print("Updated: {}".format(expense))
@@ -75,14 +79,14 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
         """Adds Tags to the database"""
 
         if not tags:
-            return None
+            return []
 
-        tag_query_parts = list(
-            filter(
-                None,
-                map(self.__create_tag_persisting_query_part, tags)
-            )
+        valid_tag_persisting_query_parts = map(
+            self.__create_tag_persisting_query_part,
+            self.__filter_out_existing_tags(tags)
         )
+
+        tag_query_parts = list(filter(None, valid_tag_persisting_query_parts))
 
         self.__connection_provider.execute_query("INSERT INTO {table_name} " \
             "(tag_id, name) VALUES {tags}".format(
@@ -91,11 +95,38 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
 
         return tags
 
-    def __create_tag_persisting_query_part(self, tag):
-        if not self.__check_if_tag_exists(tag):
-            return "('{}', '{}')".format(tag.get_tag_id(), tag.get_name())
+    def persist_expense_tags(self, expense):
+        """
+        Adds Expense tags to the database
+        and stores their relation with the Expense
+        """
 
-        return None
+        if not expense:
+            return []
+
+        persisted_tags = self.persist_tags(expense.get_tags())
+
+        delete_query = "DELETE FROM {} WHERE expense_id='{}'".format(
+            self.__expense_tags_table_name, expense.get_expense_id())
+
+        self.__connection_provider.execute_query(delete_query)
+
+        insert_query = "INSERT INTO {} (tag_id, expense_id) VALUES {}".format(
+            self.__expense_tags_table_name,
+            ", ".join(["('{}', '{}')".format(
+                    tag.get_tag_id(), expense.get_expense_id()
+                ) for tag in persisted_tags])
+        )
+
+        self.__connection_provider.execute_query(insert_query)
+
+        return persisted_tags
+
+    def __filter_out_existing_tags(self, tags):
+        return list(filter(lambda tag: not self.__check_if_tag_exists(tag), tags))
+
+    def __create_tag_persisting_query_part(self, tag):
+        return "('{}', '{}')".format(tag.get_tag_id(), tag.get_name())
 
     def __check_if_tag_exists(self, tag):
         if not tag:

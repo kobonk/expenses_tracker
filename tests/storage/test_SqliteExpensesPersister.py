@@ -1,9 +1,12 @@
 import re
 import unittest
 
+from expense.Category import Category
+from expense.Expense import Expense
 from expense.Tag import Tag
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesPersister import SqliteExpensesPersister
+from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 
 from tests.TestValidationUtils import (
     validate_dict,
@@ -107,7 +110,7 @@ class TestSqliteExpensesPersister(unittest.TestCase):
     def test_does_not_persist_tags_if_none_provided_and_returns_none(self):
         self.sut = self.create()
 
-        self.assertEqual(None, self.sut.persist_tags(None))
+        self.assertEqual([], self.sut.persist_tags(None))
 
         rows = self.connection_provider.execute_query("SELECT name, tag_id " \
             "FROM {}".format(self.tags_table_name))
@@ -130,6 +133,20 @@ class TestSqliteExpensesPersister(unittest.TestCase):
         expected_tags = [Tag("id-X", "first tag"), tags[-1]]
 
         self.assertListEqual(expected_tags, result)
+
+    def test_persists_expense_tags_and_relations(self):
+        self.sut = self.create()
+
+        category = Category("category-id-1", "Some Category")
+        tags = [Tag("id-1", "first tag"), Tag("id-2", "other tag")]
+        expense = Expense("expense-id-1", "TEST", 1, 1566172800, category, tags)
+
+        retriever = SqliteExpensesRetriever(self.database_tables,
+                                            self.connection_provider)
+
+        self.sut.persist_expense_tags(expense)
+
+        self.assertListEqual(tags, retriever.retrieve_tags())
 
 if __name__ is "__main__":
     unittest.main()

@@ -28,4 +28,4 @@ class Category:
 
     @classmethod
     def from_json(cls, json):
-        return Category(str(uuid.uuid4()), json["name"])
+        return Category(json["id"] if "id" in json else str(uuid.uuid4()), json["name"])

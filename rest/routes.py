@@ -77,7 +77,6 @@ def add_expense():
 def update_expense(expense_id):
     if request.method == "PATCH":
         persister = get_expenses_persister()
-
         expenses_retriever = get_expenses_retriever()
         expense = expenses_retriever.retrieve_expense(expense_id)
 
@@ -89,7 +88,14 @@ def update_expense(expense_id):
 
             expense = persister.update_expense(expense_id, json_data)
 
-        return jsonify(expense.to_json())
+            return jsonify(expense.to_json())
+
+    if request.method == "GET":
+        expenses_retriever = get_expenses_retriever()
+        expense = expenses_retriever.retrieve_expense(expense_id)
+
+        if expense:
+            return jsonify(expense.to_json())
 
 @app.route("/expenses/<starting_month>/<number_of_months>", methods = ["GET"])
 def retrieve_expenses(starting_month, number_of_months):

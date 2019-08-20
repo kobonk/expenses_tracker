@@ -2,17 +2,19 @@
 import uuid
 from datetime import date, datetime
 from expense.Category import Category
+from expense.Tag import Tag
 import pendulum
 
 class Expense:
     """The class is a model for a single Expense"""
 
-    def __init__(self, expense_id, name, cost, purchase_date, category):
+    def __init__(self, expense_id, name, cost, purchase_date, category, tags):
         self.__expense_id = expense_id
         self.__name = name
         self.__cost = cost
         self.__purchase_date = purchase_date
         self.__category = category
+        self.__tags = tags
 
     def get_expense_id(self):
         """Returns the id of the Expense"""
@@ -34,6 +36,10 @@ class Expense:
         """Returns the expense category"""
         return self.__category
 
+    def get_tags(self):
+        """Returns the list of tags"""
+        return self.__tags
+
     def get_purchase_date_string(self):
         """Returns the purchase_date in form of user-friendly string"""
         return date.fromtimestamp(self.__purchase_date).strftime("%Y-%m-%d")
@@ -45,7 +51,8 @@ class Expense:
             "cost": self.__cost,
             "date": self.get_purchase_date_string(),
             "id": self.__expense_id,
-            "name": self.__name
+            "name": self.__name,
+            "tags": [tag.to_json() for tag in self.__tags]
         }
 
     def __str__(self):
@@ -57,12 +64,12 @@ class Expense:
 
     @classmethod
     def from_json(cls, json):
-        category_dict = json["category"]
-        category = Category(category_dict["id"], category_dict["name"])
+        category = Category.from_json(json["category"])
+        tags = [Tag.from_json(tag) for tag in json["tags"]]
 
         return Expense(uuid.uuid4(), json["name"], json["cost"],
                        convert_date_string_to_timestamp(json["purchase_date"]),
-                       category)
+                       category, tags)
 
 def convert_date_string_to_timestamp(date_string):
     """Converts date (YYYY-MM-DD) to a number"""

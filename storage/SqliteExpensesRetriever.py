@@ -62,7 +62,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
     def retrieve_expense(self, expense_id):
         """Returns an Expense from the database"""
 
-        selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
+        expense_query = """SELECT {ex_table}.expense_id, {ex_table}.name,
                     {ex_table}.cost, {ex_table}.purchase_date,
                     {cat_table}.category_id,
                     {cat_table}.name AS 'category_name'
@@ -74,9 +74,27 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
                         cat_table=self.__categories_table_name,
                         expense_id=expense_id)
 
-        rows = self.__execute_query(selection)
+        expense_rows = self.__execute_query(expense_query)
 
-        return self.__convert_table_row_to_expense(rows[0])
+        if not expense_rows:
+            return None
+
+        tag_query = "SELECT {tag_table}.name, {tag_table}.tag_id " \
+            "FROM {tag_table} " \
+            "JOIN {ex_tag_table} " \
+            "ON {tag_table}.tag_id = {ex_tag_table}.tag_id " \
+            "JOIN {ex_table} " \
+            "ON {ex_tag_table}.expense_id = {ex_table}.expense_id " \
+            "WHERE {ex_table}.expense_id = '{expense_id}'".format(
+                tag_table=self.__tags_table_name,
+                ex_tag_table=self.__expense_tags_table_name,
+                ex_table=self.__expenses_table_name,
+                expense_id=expense_rows[0][0]
+            )
+
+        tag_rows = self.__execute_query(tag_query)
+
+        return self.__convert_table_row_to_expense(expense_rows[0], tag_rows)
 
     def retrieve_expenses(self, latest_month, number_of_months):
         """Returns the list of Expenses for certain period of time"""
@@ -84,7 +102,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         month_end = pendulum.parse(latest_month).add(months=1).subtract(seconds=1)
         month_start = month_end.subtract(months=number_of_months).add(seconds=1)
 
-        selection = """SELECT {ex_table}.expense_id, {ex_table}.name,
+        expenses_query = """SELECT {ex_table}.expense_id, {ex_table}.name,
                     {ex_table}.cost, {ex_table}.purchase_date,
                     {cat_table}.category_id,
                     {cat_table}.name AS 'category_name'
@@ -99,9 +117,23 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
                         start_date=month_start.int_timestamp,
                         end_date=month_end.int_timestamp)
 
-        rows = self.__execute_query(selection)
+        expense_rows = self.__execute_query(expenses_query)
 
-        return self.__get_models_array(rows, "expense")
+        tags_query = "SELECT " \
+            "{ex_table}.expense_id, {tag_table}.name, {tag_table}.tag_id " \
+            "FROM {tag_table} " \
+            "JOIN {ex_tag_table} " \
+            "ON {tag_table}.tag_id = {ex_tag_table}.tag_id " \
+            "JOIN {ex_table} " \
+            "ON {ex_tag_table}.expense_id = {ex_table}.expense_id".format(
+                tag_table=self.__tags_table_name,
+                ex_tag_table=self.__expense_tags_table_name,
+                ex_table=self.__expenses_table_name
+            )
+
+        tag_rows = self.__execute_query(tags_query)
+
+        return self.__get_models_array(expense_rows, "expense", tag_rows)
 
     def retrieve_months(self):
         """Returns a list of months which may have Expenses registered"""
@@ -168,7 +200,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
     def __execute_query(self, query):
         return self.__connection_provider.execute_query(query)
 
-    def __get_models_array(self, rows, model_type):
+    def __get_models_array(self, rows, model_type, additional_rows=[]):
         models = []
 
         if not rows:
@@ -177,7 +209,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         convert_data_to_model = self.__get_data_converter(model_type)
 
         for row in rows:
-            models.append(convert_data_to_model(row))
+            models.append(convert_data_to_model(row, additional_rows))
 
         return models
 
@@ -191,17 +223,29 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         if model_type == "tag":
             return self.__convert_table_row_to_tag
 
-    def __convert_table_row_to_expense(self, table_row):
-        return Expense(table_row[0], html.unescape(table_row[1]), table_row[2],
-                       table_row[3], self.__convert_table_row_to_category(
-                           [table_row[4], table_row[5]]
-                       ))
+    def __convert_table_row_to_expense(self, table_row, tag_rows):
+        expense_tag_rows = self.__extract_expense_tag_rows(table_row[0], tag_rows)
 
-    def __convert_table_row_to_category(self, table_row):
+        return Expense(
+            expense_id=table_row[0],
+            name=html.unescape(table_row[1]),
+            cost=table_row[2],
+            purchase_date=table_row[3],
+            category=self.__convert_table_row_to_category(table_row[4:]),
+            tags=[self.__convert_table_row_to_tag(tag_row)
+                for tag_row in expense_tag_rows]
+        )
+
+    def __convert_table_row_to_category(self, table_row, additional_rows=[]):
         return Category(table_row[0], html.unescape(table_row[1]))
 
-    def __convert_table_row_to_tag(self, table_row):
+    def __convert_table_row_to_tag(self, table_row, additional_rows=[]):
         return Tag(table_row[0], html.unescape(table_row[1]))
+
+    def __extract_expense_tag_rows(self, expense_id, tag_rows):
+        filtered = list(filter(lambda row: row[0] == expense_id, tag_rows))
+
+        return [(row[1], row[2]) for row in filtered]
 
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:
