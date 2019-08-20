@@ -31,4 +31,4 @@ class Tag:
 
     @classmethod
     def from_json(cls, json):
-        return Tag(json["name"], str(uuid.uuid4()))
+        return Tag(json["id"] if "id" in json else str(uuid.uuid4()), json["name"])
