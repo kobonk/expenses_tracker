@@ -240,12 +240,12 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         return Category(table_row[0], html.unescape(table_row[1]))
 
     def __convert_table_row_to_tag(self, table_row, additional_rows=[]):
-        return Tag(table_row[0], html.unescape(table_row[1]))
+        return Tag(table_row[1], html.unescape(table_row[0]))
 
     def __extract_expense_tag_rows(self, expense_id, tag_rows):
         filtered = list(filter(lambda row: row[0] == expense_id, tag_rows))
 
-        return [(row[1], row[2]) for row in filtered]
+        return [tuple(row[1:]) for row in filtered]
 
     def __validate_connection_provider(self, connection_provider):
         if not connection_provider:
