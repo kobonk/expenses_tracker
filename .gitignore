@@ -7,3 +7,4 @@ run_server.bat
 .vscode
 .venv
 *.egg-info
+*.pyc
