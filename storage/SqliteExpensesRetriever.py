@@ -180,7 +180,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
     def retrieve_tags(self):
         """Returns the list of all Tags"""
-        rows = self.__execute_query("SELECT * FROM {} ORDER BY name ASC".format(
+        rows = self.__execute_query("SELECT name, tag_id FROM {} ORDER BY name ASC".format(
                                     self.__tags_table_name))
 
         return self.__get_models_array(rows, "tag")
