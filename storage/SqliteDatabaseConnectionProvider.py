@@ -82,7 +82,6 @@ class SqliteDatabaseConnectionProvider:
 
     def __ensure_expense_tags_table_exists(self):
         columns = [
-            ("id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
             ("expense_id", "TEXT"),
             ("tag_id", "TEXT")
         ]
