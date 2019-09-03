@@ -1,8 +1,11 @@
 import re
 import unittest
 
+from expense.Category import Category
+from expense.Expense import Expense
 from expense.Tag import Tag
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
+from storage.SqliteExpensesPersister import SqliteExpensesPersister
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 
 from tests.TestValidationUtils import (
@@ -136,6 +139,30 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         self.connection_provider.execute_query(query)
 
         self.assertEqual(expected_tags, self.sut.retrieve_tags())
+
+    def test_retrieves_expense_tags(self):
+        self.sut = self.create()
+
+        persister = SqliteExpensesPersister(
+            self.database_tables, self.connection_provider)
+        
+        tags = [
+            Tag("tag-1", "First Tag"),
+            Tag("tag-2", "Second Tag"),
+            Tag("tag-3", "Third Tag")
+        ]
+
+        category = Category("category-1", "Some Category")
+
+        expenses = [
+            Expense("ex-1", "First Expense", 11, 1566172800, category, tags[:2]),
+            Expense("ex-2", "Other Expense", 22, 1566172800, category, tags[1:])
+        ]
+        
+        for expense in expenses:
+            persister.add_expense(expense)
+
+        self.assertListEqual(tags[:2], self.sut.retrieve_expense_tags(expenses[0]))
 
 if __name__ is "__main__":
     unittest.main()

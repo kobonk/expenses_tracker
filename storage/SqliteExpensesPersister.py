@@ -81,17 +81,23 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
         if not tags or len(tags) == 0:
             return []
 
-        valid_tag_persisting_query_parts = map(
+        new_tags = self.__filter_out_existing_tags(tags)
+
+        if len(new_tags) == 0:
+            return []
+
+        tag_persist_query_parts = map(
             self.__create_tag_persisting_query_part,
-            self.__filter_out_existing_tags(tags)
+            new_tags
         )
 
-        tag_query_parts = list(filter(None, valid_tag_persisting_query_parts))
-
-        self.__connection_provider.execute_query("INSERT INTO {table_name} " \
+        tag_query_parts = list(filter(None, tag_persist_query_parts))
+        insertion_query = "INSERT INTO {table_name} " \
             "(tag_id, name) VALUES {tags}".format(
                 table_name=self.__tags_table_name,
-                tags=", ".join(tag_query_parts)))
+                tags=", ".join(tag_query_parts))
+
+        self.__connection_provider.execute_query(insertion_query)
 
         return tags
 
@@ -104,30 +110,35 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
         if not expense:
             return []
 
-        persisted_tags = self.persist_tags(expense.get_tags())
-        delete_query = self.__get_expense_tags_delete_query(expense)
+        retriever = ExpensesRetrieverFactory.create(DATABASE_TYPE)
+        previous_tags = retriever.retrieve_expense_tags(expense)
+        current_tags = expense.get_tags()
+        obsolete_tags = list(set(previous_tags) - set(current_tags))
+        new_tags = list(set(current_tags) - set(previous_tags))
 
-        self.__connection_provider.execute_query(delete_query)
+        if obsolete_tags and len(obsolete_tags) > 0:
+            delete_query = self.__get_expense_tags_delete_query(expense, obsolete_tags)
 
-        if persisted_tags and len(persisted_tags) > 0:
+            self.__connection_provider.execute_query(delete_query)
+
+        if new_tags and len(new_tags) > 0:
             insert_query = "INSERT INTO {} (tag_id, expense_id) " \
                 "VALUES {}".format(
                     self.__expense_tags_table_name,
                     ", ".join(["('{}', '{}')".format(
                             tag.get_tag_id(), expense.get_expense_id()
-                        ) for tag in persisted_tags])
+                        ) for tag in new_tags])
                 )
 
             self.__connection_provider.execute_query(insert_query)
 
-        return persisted_tags
+        return current_tags
 
-    def __get_expense_tags_delete_query(self, expense: Expense):
-        tags = expense.get_tags()
+    def __get_expense_tags_delete_query(self, expense: Expense, obsolete_tags):
         expense_id = expense.get_expense_id()
 
-        if tags and len(tags) > 0:
-            tag_ids = [tag.get_tag_id() for tag in tags]
+        if obsolete_tags and len(obsolete_tags) > 0:
+            tag_ids = [tag.get_tag_id() for tag in obsolete_tags]
 
             return "DELETE FROM {} WHERE expense_id='{}' " \
                 "AND tag_id IN ('{}')".format(

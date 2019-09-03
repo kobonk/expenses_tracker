@@ -29,6 +29,9 @@ class Tag:
     def __eq__(self, other):
         return self.__name == other.get_name()
 
+    def __hash__(self):
+        return int("".join([str(ord(ch)) for ch in self.__tag_id][:17]))
+
     @classmethod
     def from_json(cls, json):
         return Tag(json["id"] if "id" in json else str(uuid.uuid4()), json["name"])

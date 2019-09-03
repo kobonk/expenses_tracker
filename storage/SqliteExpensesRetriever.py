@@ -185,6 +185,19 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
         return self.__get_models_array(rows, "tag")
 
+    def retrieve_expense_tags(self, expense: Expense):
+        """Returns the list of all Tags"""
+        rows = self.__execute_query("SELECT name, {tag_table}.tag_id FROM {tag_table} " \
+            "JOIN {ex_tag_table} ON " \
+            "{tag_table}.tag_id = {ex_tag_table}.tag_id " \
+            "WHERE {ex_tag_table}.expense_id='{expense_id}'".format(
+                tag_table=self.__tags_table_name,
+                ex_tag_table=self.__expense_tags_table_name,
+                expense_id=expense.get_expense_id())
+            )
+
+        return self.__get_models_array(rows, "tag")
+
     def __leave_unique_values(self, list_of_values):
         if not list:
             return []
