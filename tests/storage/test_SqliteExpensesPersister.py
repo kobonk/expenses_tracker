@@ -107,10 +107,20 @@ class TestSqliteExpensesPersister(unittest.TestCase):
 
         self.assertEqual(rows, expected_rows)
 
-    def test_does_not_persist_tags_if_none_provided_and_returns_none(self):
+    def test_does_not_persist_not_provided_tags_and_returns_empty_list(self):
         self.sut = self.create()
 
         self.assertEqual([], self.sut.persist_tags(None))
+
+        rows = self.connection_provider.execute_query("SELECT name, tag_id " \
+            "FROM {}".format(self.tags_table_name))
+
+        self.assertEqual(rows, [])
+
+    def test_does_not_persist_empty_list_of_tags_and_returns_empty_list(self):
+        self.sut = self.create()
+
+        self.assertEqual([], self.sut.persist_tags([]))
 
         rows = self.connection_provider.execute_query("SELECT name, tag_id " \
             "FROM {}".format(self.tags_table_name))

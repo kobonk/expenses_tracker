@@ -78,7 +78,7 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
     def persist_tags(self, tags=[]):
         """Adds Tags to the database"""
 
-        if not tags:
+        if not tags or len(tags) == 0:
             return []
 
         valid_tag_persisting_query_parts = map(
@@ -105,22 +105,38 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
             return []
 
         persisted_tags = self.persist_tags(expense.get_tags())
-
-        delete_query = "DELETE FROM {} WHERE expense_id='{}'".format(
-            self.__expense_tags_table_name, expense.get_expense_id())
+        delete_query = self.__get_expense_tags_delete_query(expense)
 
         self.__connection_provider.execute_query(delete_query)
 
-        insert_query = "INSERT INTO {} (tag_id, expense_id) VALUES {}".format(
-            self.__expense_tags_table_name,
-            ", ".join(["('{}', '{}')".format(
-                    tag.get_tag_id(), expense.get_expense_id()
-                ) for tag in persisted_tags])
-        )
+        if persisted_tags and len(persisted_tags) > 0:
+            insert_query = "INSERT INTO {} (tag_id, expense_id) " \
+                "VALUES {}".format(
+                    self.__expense_tags_table_name,
+                    ", ".join(["('{}', '{}')".format(
+                            tag.get_tag_id(), expense.get_expense_id()
+                        ) for tag in persisted_tags])
+                )
 
-        self.__connection_provider.execute_query(insert_query)
+            self.__connection_provider.execute_query(insert_query)
 
         return persisted_tags
+
+    def __get_expense_tags_delete_query(self, expense: Expense):
+        tags = expense.get_tags()
+        expense_id = expense.get_expense_id()
+
+        if tags and len(tags) > 0:
+            tag_ids = [tag.get_tag_id() for tag in tags]
+
+            return "DELETE FROM {} WHERE expense_id='{}' " \
+                "AND tag_id IN ('{}')".format(
+                    self.__expense_tags_table_name,
+                    expense_id,
+                    "', '".join(tag_ids))
+
+        return "DELETE FROM {} WHERE expense_id='{}'".format(
+            self.__expense_tags_table_name, expense_id)
 
     def __filter_out_existing_tags(self, tags):
         return list(filter(lambda tag: not self.__check_if_tag_exists(tag), tags))
