@@ -131,6 +131,7 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
                 )
 
             self.__connection_provider.execute_query(insert_query)
+            self.persist_tags(new_tags)
 
         return current_tags
 
