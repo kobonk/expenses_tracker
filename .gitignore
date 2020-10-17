@@ -5,6 +5,5 @@ run.bat
 run_server.bat
 .venv
 .vscode
-.venv
 *.egg-info
 *.pyc

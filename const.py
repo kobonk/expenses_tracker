@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-DEBUG_MODE = True
+DEBUG_MODE = True if 'DEBUG_BACKEND' in os.environ and os.environ['DEBUG_BACKEND'] else False
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
