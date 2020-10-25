@@ -4,23 +4,17 @@ LABEL maintainer="kobonk@kobonk.pl"
 RUN apt update
 RUN apt install -y git python3.7 python3-pip
 
-ENV TARGET_DIR /expenses_tracker
-ENV TIMEZONE Europe/Warsaw
+RUN mkdir -p /expenses_tracker
 
-RUN mkdir -p ${TARGET_DIR}
+WORKDIR /expenses_tracker
 
-COPY *.py ${TARGET_DIR}/
-COPY requirements.txt ${TARGET_DIR}/
-COPY /dbs/ ${TARGET_DIR}/dbs/
-COPY /expense/ ${TARGET_DIR}/expense/
-COPY /rest/ ${TARGET_DIR}/rest/
-COPY /storage/ ${TARGET_DIR}/storage/
+COPY . .
 
-RUN pip3 install -r ${TARGET_DIR}/requirements.txt
+RUN pip3 install -r requirements.txt
 
 # Set Timezone
-RUN echo ${TIMEZONE} > /etc/timezone
+RUN echo Europe/Warsaw > /etc/timezone
 
 EXPOSE 5000/tcp
 
-CMD ["sh", "-c", "python3 ${TARGET_DIR}/main.py"]
+CMD ["sh", "-c", "python3 main.py"]

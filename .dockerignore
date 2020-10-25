@@ -1,2 +1,22 @@
 # Cached files
 */__pycache__/*
+__pycache__/*
+
+# Docker files
+.dockerignore
+Dockerfile
+
+# Git repository details
+.git
+.gitignore
+
+# IDE
+.venv
+
+# Python virtual environment
+.vscode
+
+# Compiled code
+*/*.egg-info
+*.egg-info
+*/*.pyc
