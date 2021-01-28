@@ -11,10 +11,10 @@ Dockerfile
 .gitignore
 
 # IDE
-.venv
+.vscode
 
 # Python virtual environment
-.vscode
+.venv
 
 # Compiled code
 */*.egg-info

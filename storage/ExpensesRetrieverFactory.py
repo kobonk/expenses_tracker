@@ -1,7 +1,7 @@
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 from validation_utils import validate_non_empty_string
-from const import DATABASE_TABLES, DATABASE_TYPES, SQLITE_DATABASE_PATH
+from const import DATABASE_TABLES, DATABASE_TYPES, FULL_DATABASE_PATH
 
 class ExpensesRetrieverFactory:
     @staticmethod
@@ -18,7 +18,7 @@ class ExpensesRetrieverFactory:
         return SqliteExpensesRetriever(
             DATABASE_TABLES,
             SqliteDatabaseConnectionProvider(
-                SQLITE_DATABASE_PATH,
+                FULL_DATABASE_PATH,
                 DATABASE_TABLES
             )
         )
