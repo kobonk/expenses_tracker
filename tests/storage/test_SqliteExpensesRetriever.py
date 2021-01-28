@@ -1,5 +1,6 @@
 import re
 import unittest
+from unittest.mock import patch
 
 from expense.Category import Category
 from expense.Expense import Expense
@@ -140,12 +141,13 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
 
         self.assertEqual(expected_tags, self.sut.retrieve_tags())
 
-    def test_retrieves_expense_tags(self):
+    @patch('builtins.print')
+    def test_retrieves_expense_tags(self, _mock_print):
         self.sut = self.create()
 
         persister = SqliteExpensesPersister(
             self.database_tables, self.connection_provider)
-        
+
         tags = [
             Tag("tag-1", "First Tag"),
             Tag("tag-2", "Second Tag"),
@@ -158,11 +160,11 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
             Expense("ex-1", "First Expense", 11, 1566172800, category, tags[:2]),
             Expense("ex-2", "Other Expense", 22, 1566172800, category, tags[1:])
         ]
-        
+
         for expense in expenses:
             persister.add_expense(expense)
 
         self.assertListEqual(tags[:2], self.sut.retrieve_expense_tags(expenses[0]))
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     unittest.main()

@@ -73,5 +73,5 @@ class TestSqliteDatabaseConnectionProvider(unittest.TestCase):
 
         self.assertTrue(len(self.sut.execute_query(query)) > 0)
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     unittest.main()

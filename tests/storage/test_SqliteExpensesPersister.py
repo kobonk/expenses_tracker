@@ -15,7 +15,6 @@ from tests.TestValidationUtils import (
     validate_provided
 )
 
-
 class TestSqliteExpensesPersister(unittest.TestCase):
     def create(self):
         return SqliteExpensesPersister(self.database_tables,
@@ -158,5 +157,5 @@ class TestSqliteExpensesPersister(unittest.TestCase):
 
         self.assertListEqual(tags, retriever.retrieve_tags())
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     unittest.main()
