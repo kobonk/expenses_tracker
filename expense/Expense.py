@@ -12,7 +12,7 @@ class Expense:
         self.__expense_id = expense_id
         self.__name = name
         self.__cost = cost
-        self.__purchase_date = purchase_date
+        self.__purchase_date = purchase_date if purchase_date else (datetime.today() - datetime(1970,1,1)).total_seconds()
         self.__category = category
         self.__tags = tags
 

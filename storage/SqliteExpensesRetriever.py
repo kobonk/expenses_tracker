@@ -19,6 +19,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         self.__categories_table_name = database_tables["categories"]
         self.__tags_table_name = database_tables["tags"]
         self.__expense_tags_table_name = database_tables["expense_tags"]
+        self.__suggestions_table_name = database_tables["suggestions"]
         self.__connection_provider = connection_provider
 
     def filter_expenses(self, expense_name):
@@ -198,6 +199,19 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
         return self.__get_models_array(rows, "tag")
 
+    def retrieve_expense_suggestions(self, month):
+      """Returns a list of expense suggestions for the provided month"""
+      rows = self.__execute_query("SELECT {table}.name, {table}.category_id, {cat_table}.name AS 'category_name', {table}.cost, {table}.months FROM {table} " \
+          "LEFT JOIN {cat_table} ON " \
+          "{table}.category_id = {cat_table}.category_id " \
+          "WHERE regexp('^{month},|,{month},|,{month}$', months)".format(
+              table=self.__suggestions_table_name,
+              cat_table=self.__categories_table_name,
+              month=month)
+          )
+
+      return self.__get_models_array(list(rows), "suggestion")
+
     def __leave_unique_values(self, list_of_values):
         if not list:
             return []
@@ -236,6 +250,9 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         if model_type == "tag":
             return self.__convert_table_row_to_tag
 
+        if model_type == "suggestion":
+            return self.__convert_table_row_to_suggestion
+
     def __convert_table_row_to_expense(self, table_row, tag_rows):
         expense_tag_rows = self.__extract_expense_tag_rows(table_row[0], tag_rows)
 
@@ -254,6 +271,11 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
     def __convert_table_row_to_tag(self, table_row, additional_rows=[]):
         return Tag(table_row[1], html.unescape(table_row[0]))
+
+    def __convert_table_row_to_suggestion(self, table_row, additional_rows=[]):
+        category = Category(table_row[1], table_row[2])
+
+        return Expense('', table_row[0], table_row[3], None, category, [])
 
     def __extract_expense_tag_rows(self, expense_id, tag_rows):
         filtered = list(filter(lambda row: row[0] == expense_id, tag_rows))

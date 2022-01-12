@@ -1,11 +1,15 @@
 """Provides a connection to Sqlite database"""
 import os
 import sqlite3
+import re
 
 from validation_utils import validate_dict, validate_non_empty_string
 
 def create_columns_schema(columns):
     return ", ".join("{} {}".format(name, schema) for name, schema in columns)
+
+def regexp(pattern, string, search=re.search):
+    return 1 if search(pattern, string) else 0
 
 class SqliteDatabaseConnectionProvider:
     __connection = None
@@ -28,7 +32,11 @@ class SqliteDatabaseConnectionProvider:
         """Connects to Sqlite database and returns the connection"""
         self.__ensure_database_directory_exists()
 
-        return sqlite3.connect(self.__database_path)
+        connection = sqlite3.connect(self.__database_path)
+
+        connection.create_function('regexp', 2, regexp)
+
+        return connection
 
     def ensure_necessary_tables_exist(self):
         """

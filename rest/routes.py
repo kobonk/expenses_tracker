@@ -179,5 +179,16 @@ class Categories(Resource):
 
         return jsonify(categories_as_json)
 
+class ExpenseSugestions(Resource):
+    def get(self, month):
+        if not month:
+            return jsonify([])
+
+        expenses_retriever = get_expenses_retriever()
+        suggestions = expenses_retriever.retrieve_expense_suggestions(month)
+
+        return jsonify(convert_models_to_json(suggestions))
+
 api.add_resource(ExpenseNames, "/expense-names/<name>")
 api.add_resource(Categories, "/categories")
+api.add_resource(ExpenseSugestions, "/suggestions/<month>")

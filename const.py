@@ -16,7 +16,8 @@ DATABASE_TABLES = {
     "categories": "categories",
     "expenses": "expenses",
     "expense_tags": "expense_tags",
-    "tags": "tags"
+    "tags": "tags",
+    "suggestions": "expense_suggestions"
 }
 
 DATABASE_TYPE = DATABASE_TYPES["sqlite"]
