@@ -27,12 +27,15 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         self.categories_table_name = "categories"
         self.tags_table_name = "tags"
         self.expense_tags_table_name = "expense_tags"
+        self.suggestions_table_name = "expense_suggestions"
 
         self.database_tables = {
             "expenses": self.expenses_table_name,
             "categories": self.categories_table_name,
             "tags": self.tags_table_name,
-            "expense_tags": self.expense_tags_table_name
+            "expense_tags": self.expense_tags_table_name,
+            "shops": self.shops_table_name,
+            "suggestions": self.suggestions_table_name
         }
 
         self.connection_provider = SqliteDatabaseConnectionProvider(":memory:",

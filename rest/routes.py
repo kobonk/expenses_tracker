@@ -83,8 +83,8 @@ def update_expense(expense_id):
         if expense:
             json_data = request.get_json(force=True)
 
-            if "purchase_date" in json_data:
-                json_data["purchase_date"] = convert_date_string_to_timestamp(json_data["purchase_date"])
+            if "date" in json_data:
+                json_data["date"] = convert_date_string_to_timestamp(json_data["date"])
 
             expense = persister.update_expense(expense_id, json_data)
 

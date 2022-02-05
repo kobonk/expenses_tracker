@@ -199,16 +199,26 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
 
         return self.__get_models_array(rows, "tag")
 
-    def retrieve_expense_suggestions(self, month):
-      """Returns a list of expense suggestions for the provided month"""
-      rows = self.__execute_query("SELECT {table}.name, {table}.category_id, {cat_table}.name AS 'category_name', {table}.cost, {table}.months FROM {table} " \
-          "LEFT JOIN {cat_table} ON " \
-          "{table}.category_id = {cat_table}.category_id " \
-          "WHERE regexp('^{month},|,{month},|,{month}$', months)".format(
-              table=self.__suggestions_table_name,
-              cat_table=self.__categories_table_name,
-              month=month)
-          )
+    def retrieve_expense_suggestions(self, month_date):
+      """Returns a list of expense suggestions for the provided month_date"""
+
+      month_end = pendulum.parse(month_date).add(months=1).subtract(seconds=1)
+      month_start = month_end.subtract(months=1).add(seconds=1)
+      month = month_start.month
+
+      s_table = self.__suggestions_table_name
+      e_table = self.__expenses_table_name
+      c_table = self.__categories_table_name
+
+      query = f"SELECT s.name, s.category_id, c.name AS category_name, s.cost FROM {s_table} s " \
+        f"LEFT JOIN {c_table} c ON s.category_id = c.category_id " \
+        f"WHERE NOT EXISTS (SELECT * FROM {e_table} e WHERE s.name = e.name " \
+        f"AND e.purchase_date < {month_end.int_timestamp} AND e.purchase_date >= {month_start.int_timestamp}) " \
+        f"AND REGEXP('^{month},|,{month},|,{month}$', s.months)"
+
+      print(query)
+
+      rows = self.__execute_query(query)
 
       return self.__get_models_array(list(rows), "suggestion")
 
@@ -260,7 +270,7 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
             expense_id=table_row[0],
             name=html.unescape(table_row[1]),
             cost=table_row[2],
-            purchase_date=table_row[3],
+            date=table_row[3],
             category=self.__convert_table_row_to_category(table_row[4:]),
             tags=[self.__convert_table_row_to_tag(tag_row)
                 for tag_row in expense_tag_rows]

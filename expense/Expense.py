@@ -8,11 +8,11 @@ import pendulum
 class Expense:
     """The class is a model for a single Expense"""
 
-    def __init__(self, expense_id, name, cost, purchase_date, category, tags):
+    def __init__(self, expense_id, name, cost, date, category, tags):
         self.__expense_id = expense_id
         self.__name = name
         self.__cost = cost
-        self.__purchase_date = purchase_date if purchase_date else (datetime.today() - datetime(1970,1,1)).total_seconds()
+        self.__date = date if date else (datetime.today() - datetime(1970,1,1)).total_seconds()
         self.__category = category
         self.__tags = tags
 
@@ -29,8 +29,8 @@ class Expense:
         return self.__cost
 
     def get_purchase_date(self):
-        """Returns the purchase_date (seconds since epoch) of the Expense"""
-        return self.__purchase_date
+        """Returns the date (seconds since epoch) of the Expense"""
+        return self.__date
 
     def get_category(self):
         """Returns the expense category"""
@@ -41,11 +41,11 @@ class Expense:
         return self.__tags
 
     def get_purchase_date_string(self):
-        """Returns the purchase_date in form of user-friendly string"""
-        return date.fromtimestamp(self.__purchase_date).strftime("%Y-%m-%d")
+        """Returns the date in form of user-friendly string"""
+        return date.fromtimestamp(self.__date).strftime("%Y-%m-%d")
 
     def to_json(self):
-        """Returns a directory which can be used for JSON output"""
+        """Returns a dictionary which can be used for JSON output"""
         return {
             "category": self.__category.to_json(),
             "cost": self.__cost,
@@ -68,7 +68,7 @@ class Expense:
         tags = [Tag.from_json(tag) for tag in json["tags"]]
 
         return Expense(uuid.uuid4(), json["name"], json["cost"],
-                       convert_date_string_to_timestamp(json["purchase_date"]),
+                       convert_date_string_to_timestamp(json["date"]),
                        category, tags)
 
 def convert_date_string_to_timestamp(date_string):
