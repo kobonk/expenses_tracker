@@ -216,8 +216,6 @@ class SqliteExpensesRetriever(ExpensesRetrieverBase):
         f"AND e.purchase_date < {month_end.int_timestamp} AND e.purchase_date >= {month_start.int_timestamp}) " \
         f"AND REGEXP('^{month},|,{month},|,{month}$', s.months)"
 
-      print(query)
-
       rows = self.__execute_query(query)
 
       return self.__get_models_array(list(rows), "suggestion")
