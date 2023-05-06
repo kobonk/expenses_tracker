@@ -6,14 +6,15 @@ from sqlite3 import Error
 
 from const import DATABASE_TYPE
 from validation_utils import validate_dict, validate_non_empty_string
-from expense.Expense import Expense
+from expense.Expense import Expense, convert_date_string_to_timestamp
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 from storage.ExpensesPersisterBase import ExpensesPersisterBase
+from storage.DbQueryProvider import DbQueryProvider, DbQueryType, SaveExpenseParams
 
 class SqliteExpensesPersister(ExpensesPersisterBase):
     """Persists Expenses data in a database"""
 
-    def __init__(self, database_tables, connection_provider):
+    def __init__(self, database_tables, connection_provider, query_provider: DbQueryProvider):
         self.__validate_database_tables(database_tables)
         self.__validate_connection_provider(connection_provider)
 
@@ -21,26 +22,22 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
         self.__categories_table_name = database_tables["categories"]
         self.__tags_table_name = database_tables["tags"]
         self.__expense_tags_table_name = database_tables["expense_tags"]
+        self.__shops_table_name = database_tables["shops"]
         self.__connection_provider = connection_provider
+        self.__query_provider = query_provider
 
     def add_expense(self, expense : Expense):
         """Adds a new Expense to database"""
         if not expense:
             return None
 
-        query = "INSERT INTO {table_name} (expense_id, name, cost, " \
-            "purchase_date, category_id ) VALUES ('{e_id}', '{e_name}', " \
-            "{e_cost}, {e_purchase_date}, '{e_category_id}')".format(
-                table_name=self.__expenses_table_name,
-                e_id=expense.get_expense_id(),
-                e_name=html.escape(expense.get_name()),
-                e_cost=expense.get_cost(),
-                e_purchase_date=expense.get_purchase_date(),
-                e_category_id=html.escape(expense.get_category()
-                                            .get_category_id())
-            )
+        query = self.__query_provider.create_query(DbQueryType.SAVE_EXPENSE)
 
-        self.__connection_provider.execute_query(query)
+        params: SaveExpenseParams = (
+          expense.get_name(), expense.get_cost(),
+          expense.get_purchase_date(), expense.get_category().get_category_id())
+
+        self.__connection_provider.execute_query(query, params)
         self.persist_expense_tags(expense)
 
         print("Added: {}".format(expense))
@@ -48,7 +45,7 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
     def update_expense(self, expense_id, changes):
         """Updates existing Expense in the database"""
 
-        updates = ["{} = '{}'".format(k, v) for k, v in changes.items()]
+        updates = ["{} = '{}'".format(k, convert_date_string_to_timestamp(v) if k == 'purchase_date' else v) for k, v in changes.items()]
         query = "UPDATE {} SET {}  WHERE expense_id = '{}'".format(
                 self.__expenses_table_name,
                 ", ".join(updates),
@@ -66,9 +63,8 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
     def add_category(self, category):
         """Adds a new Category to the database"""
 
-        query = "INSERT INTO {} (category_id, name) VALUES ('{}', '{}')".format(
+        query = "INSERT INTO {} (name) VALUES ('{}', '{}')".format(
                     self.__categories_table_name,
-                    html.escape(category.get_category_id()),
                     html.escape(category.get_name()))
 
         self.__connection_provider.execute_query(query)
@@ -134,6 +130,19 @@ class SqliteExpensesPersister(ExpensesPersisterBase):
             self.persist_tags(new_tags)
 
         return current_tags
+
+    def persist_shop(self, shop):
+        """
+        Adds Shop record to the database
+        """
+
+        query = "INSERT INTO {} (name) VALUES ('{}')".format(
+                    self.__shops_table_name,
+                    html.escape(shop.get_name()))
+
+        self.__connection_provider.execute_query(query)
+
+        print("Added: {}".format(shop))
 
     def __get_expense_tags_delete_query(self, expense: Expense, obsolete_tags):
         expense_id = expense.get_expense_id()

@@ -27,6 +27,7 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
         self.categories_table_name = "categories"
         self.tags_table_name = "tags"
         self.expense_tags_table_name = "expense_tags"
+        self.shops_table_name = "shops"
         self.suggestions_table_name = "expense_suggestions"
 
         self.database_tables = {
@@ -168,6 +169,11 @@ class TestSqliteExpensesRetriever(unittest.TestCase):
             persister.add_expense(expense)
 
         self.assertListEqual(tags[:2], self.sut.retrieve_expense_tags(expenses[0]))
+
+    def test_retrieves_shops(self):
+      self.sut = self.create()
+
+
 
 if __name__ == "__main__":
     unittest.main()

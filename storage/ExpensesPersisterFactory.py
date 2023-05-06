@@ -1,5 +1,6 @@
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesPersister import SqliteExpensesPersister
+from storage.SqliteDbQueryProvider import SqliteDbQueryProvider
 from validation_utils import validate_non_empty_string
 from const import DATABASE_TABLES, DATABASE_TYPES, FULL_DATABASE_PATH
 
@@ -18,5 +19,6 @@ class ExpensesPersisterFactory:
             SqliteDatabaseConnectionProvider(
                 FULL_DATABASE_PATH,
                 DATABASE_TABLES
-            )
+            ),
+            SqliteDbQueryProvider()
         )

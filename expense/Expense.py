@@ -32,7 +32,7 @@ class Expense:
         """Returns the date (seconds since epoch) of the Expense"""
         return self.__date
 
-    def get_category(self):
+    def get_category(self) -> Category:
         """Returns the expense category"""
         return self.__category
 
@@ -67,7 +67,7 @@ class Expense:
         category = Category.from_json(json["category"])
         tags = [Tag.from_json(tag) for tag in json["tags"]]
 
-        return Expense(uuid.uuid4(), json["name"], json["cost"],
+        return Expense(None, json["name"], json["cost"],
                        convert_date_string_to_timestamp(json["date"]),
                        category, tags)
 

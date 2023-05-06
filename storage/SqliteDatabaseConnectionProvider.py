@@ -44,16 +44,17 @@ class SqliteDatabaseConnectionProvider:
         if they have necessary columns and adds them if they don't.
         """
 
-        self.__ensure_expenses_table_exists()
         self.__ensure_categories_table_exists()
         self.__ensure_tags_table_exists()
         self.__ensure_expense_tags_table_exists()
+        self.__ensure_shops_table_exists()
+        self.__ensure_expenses_table_exists()
 
-    def execute_query(self, query):
+    def execute_query(self, query, params = ()):
         """Makes a request to the database"""
         cursor = self.__connection.cursor()
 
-        cursor.execute(query)
+        cursor.execute(query, params)
         self.__connection.commit()
 
         return cursor.fetchall()
@@ -68,18 +69,24 @@ class SqliteDatabaseConnectionProvider:
             os.makedirs(directory)
 
     def __ensure_expenses_table_exists(self):
+        # CREATE TABLE expenses (expense_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, cost INTEGER NOT NULL DEFAULT 0, purchase_date INTEGER NOT NULL, category_id INTEGER NOT NULL, FOREIGN KEY(category_id) REFERENCES categories(category_id))
         columns = [
-            ("expense_id", "TEXT PRIMARY KEY"),
-            ("name", "TEXT"),
-            ("cost", "REAL"),
-            ("purchase_date", "REAL"),
-            ("category_id", "TEXT")
+            ("expense_id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
+            ("name", "TEXT NOT NULL"),
+            ("cost", "INTEGER NOT NULL DEFAULT 0"),
+            ("purchase_date", "INTEGER NOT NULL"),
+            ("category_id", "INTEGER NOT NULL"),
+            ("FOREIGN KEY(category_id)", "REFERENCES categories(category_id)")
         ]
 
         self.__ensure_table_exists(self.__database_tables["expenses"], columns)
 
     def __ensure_categories_table_exists(self):
-        columns = [("category_id", "TEXT PRIMARY KEY"), ("name", "TEXT")]
+        # CREATE TABLE categories (category_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)
+        columns = [
+          ("category_id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
+          ("name", "TEXT UNIQUE NOT NULL")
+        ]
 
         self.__ensure_table_exists(self.__database_tables["categories"], columns)
 
@@ -95,6 +102,14 @@ class SqliteDatabaseConnectionProvider:
         ]
 
         self.__ensure_table_exists(self.__database_tables["expense_tags"], columns)
+
+    def __ensure_shops_table_exists(self):
+        columns = [
+            ("shop_id", "INTEGER PRIMARY KEY AUTOINCREMENT"),
+            ("name", "TEXT UNIQUE NOT NULL")
+        ]
+
+        self.__ensure_table_exists(self.__database_tables["shops"], columns)
 
     def __ensure_table_exists(self, table_name, columns):
         query = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name,
@@ -121,7 +136,8 @@ class SqliteDatabaseConnectionProvider:
             "expenses": validate_non_empty_string,
             "categories": validate_non_empty_string,
             "tags": validate_non_empty_string,
-            "expense_tags": validate_non_empty_string
+            "expense_tags": validate_non_empty_string,
+            "shops": validate_non_empty_string
         }
 
         validate_dict(database_tables, "database_tables", validator_map)

@@ -10,3 +10,6 @@ class ExpensesPersisterBase():
 
     def persist_tags(self, tags):
         raise NotImplementedError("Method not implemented!")
+
+    def persist_shop(self, shop):
+        raise NotImplementedError("Method not implemented!")

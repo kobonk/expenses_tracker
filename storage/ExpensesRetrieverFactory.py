@@ -1,3 +1,4 @@
+from storage.ExpensesRetrieverBase import ExpensesRetrieverBase
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
 from validation_utils import validate_non_empty_string
@@ -5,7 +6,7 @@ from const import DATABASE_TABLES, DATABASE_TYPES, FULL_DATABASE_PATH
 
 class ExpensesRetrieverFactory:
     @staticmethod
-    def create(type):
+    def create(type) -> ExpensesRetrieverBase:
         validate_non_empty_string(type, "type")
 
         if type is DATABASE_TYPES["sqlite"]:

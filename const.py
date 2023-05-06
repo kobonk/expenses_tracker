@@ -17,6 +17,7 @@ DATABASE_TABLES = {
     "expenses": "expenses",
     "expense_tags": "expense_tags",
     "tags": "tags",
+    "shops": "shops",
     "suggestions": "expense_suggestions"
 }
 

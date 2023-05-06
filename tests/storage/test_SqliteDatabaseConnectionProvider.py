@@ -16,7 +16,8 @@ class TestSqliteDatabaseConnectionProvider(unittest.TestCase):
             "expenses": "expenses",
             "categories": "categories",
             "tags": "tags",
-            "expense_tags": "expense_tags"
+            "expense_tags": "expense_tags",
+            "shops": "shops"
         }
 
         self.sut = self.create()
@@ -46,7 +47,10 @@ class TestSqliteDatabaseConnectionProvider(unittest.TestCase):
                 "InvalidArgument:.*database_tables.tags"),
             "expense_tags": (
                 validate_non_empty_string,
-                "InvalidArgument:.*database_tables.expense_tags")
+                "InvalidArgument:.*database_tables.expense_tags"),
+            "shops": (
+                validate_non_empty_string,
+                "InvalidArgument:.*database_tables.shops")
         }
 
         validate_dict(self, validate_database_tables, self.database_tables,
@@ -63,6 +67,9 @@ class TestSqliteDatabaseConnectionProvider(unittest.TestCase):
 
     def test_ensures_expense_tags_table_exists_in_database(self):
         self.__check_if_table_exists(self.database_tables["expense_tags"])
+
+    def test_ensures_shops_table_exists_in_database(self):
+        self.__check_if_table_exists(self.database_tables["shops"])
 
     def __check_if_table_exists(self, table_name):
         query = "PRAGMA table_info('{}')".format(table_name)

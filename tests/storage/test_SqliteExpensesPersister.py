@@ -1,9 +1,11 @@
 import re
 import unittest
+from unittest.mock import patch
 
 from expense.Category import Category
 from expense.Expense import Expense
 from expense.Tag import Tag
+from expense.Shop import Shop
 from storage.SqliteDatabaseConnectionProvider import SqliteDatabaseConnectionProvider
 from storage.SqliteExpensesPersister import SqliteExpensesPersister
 from storage.SqliteExpensesRetriever import SqliteExpensesRetriever
@@ -25,6 +27,7 @@ class TestSqliteExpensesPersister(unittest.TestCase):
         self.categories_table_name = "categories"
         self.tags_table_name = "tags"
         self.expense_tags_table_name = "expense_tags"
+        self.shops_table_name = "shops"
         self.suggestions_table_name = "expense_suggestions"
 
         self.database_tables = {
@@ -32,6 +35,7 @@ class TestSqliteExpensesPersister(unittest.TestCase):
             "categories": self.categories_table_name,
             "tags": self.tags_table_name,
             "expense_tags": self.expense_tags_table_name,
+            "shops": self.shops_table_name,
             "suggestions": self.suggestions_table_name
         }
 
@@ -158,6 +162,19 @@ class TestSqliteExpensesPersister(unittest.TestCase):
         self.sut.persist_expense_tags(expense)
 
         self.assertListEqual(tags, retriever.retrieve_tags())
+
+    @patch('builtins.print')
+    def test_persists_shops(self, _mock_print):
+        self.sut = self.create()
+
+        self.sut.persist_shop(Shop(1, "Wallmart"))
+        self.sut.persist_shop(Shop(2, "7Eleven"))
+
+        rows = self.connection_provider.execute_query(
+            "SELECT * FROM {table}".format(table=self.shops_table_name)
+        )
+
+        self.assertListEqual(rows, [(1, "Wallmart"), (2, "7Eleven")])
 
 if __name__ == "__main__":
     unittest.main()
