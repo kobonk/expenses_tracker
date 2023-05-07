@@ -1,15 +1,15 @@
 """Uses Sqlite to save and update Expenses in the database"""
 import html
-import os
-import sqlite3
-from sqlite3 import Error
+from typing import Tuple
 
 from const import DATABASE_TYPE
 from validation_utils import validate_dict, validate_non_empty_string
 from expense.Expense import Expense, convert_date_string_to_timestamp
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
 from storage.ExpensesPersisterBase import ExpensesPersisterBase
-from storage.DbQueryProvider import DbQueryProvider, DbQueryType, SaveExpenseParams
+from storage.DbQueryProvider import DbQueryProvider, DbQueryType
+
+SaveExpenseParams = Tuple[str, int, int, str]
 
 class SqliteExpensesPersister(ExpensesPersisterBase):
     """Persists Expenses data in a database"""

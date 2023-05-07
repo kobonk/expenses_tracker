@@ -1,7 +1,4 @@
 from enum import Enum
-from typing import Tuple
-
-SaveExpenseParams = Tuple[str, int, int, str]
 
 class DbQueryType(Enum):
   SAVE_EXPENSE = 'SAVE_EXPENSE'

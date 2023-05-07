@@ -6,7 +6,8 @@ DEBUG_MODE = True if 'DEBUG_MODE' in os.environ and os.environ['DEBUG_MODE'] els
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 DATABASE_TYPES = {
-    "sqlite": "sqlite"
+    "sqlite": "sqlite",
+    "mariadb": "mariadb"
 }
 
 DATABASE_PATH = "/dbs/expenses-tracker.db"
@@ -21,7 +22,7 @@ DATABASE_TABLES = {
     "suggestions": "expense_suggestions"
 }
 
-DATABASE_TYPE = DATABASE_TYPES["sqlite"]
+DATABASE_TYPE = DATABASE_TYPES["mariadb"]
 
 EXPENSES_TABLE_NAME = DATABASE_TABLES["expenses"]
 CATEGORIES_TABLE_NAME = DATABASE_TABLES["categories"]

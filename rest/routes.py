@@ -7,6 +7,7 @@ from expense.Tag import Tag
 from expense.Expense import Expense, convert_date_string_to_timestamp
 from storage.ExpensesPersisterFactory import ExpensesPersisterFactory
 from storage.ExpensesRetrieverFactory import ExpensesRetrieverFactory
+from const import DATABASE_TYPE
 
 app = Flask(__name__)
 CORS(app)
@@ -22,10 +23,10 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 def get_expenses_retriever():
-    return ExpensesRetrieverFactory.create("sqlite")
+    return ExpensesRetrieverFactory.create(DATABASE_TYPE)
 
 def get_expenses_persister():
-    return ExpensesPersisterFactory.create("sqlite")
+    return ExpensesPersisterFactory.create(DATABASE_TYPE)
 
 def convert_models_to_json(models):
     return list(map(lambda model: model.to_json(), models))

@@ -7,3 +7,5 @@ run_server.bat
 .vscode
 *.egg-info
 *.pyc
+
+settings.json
